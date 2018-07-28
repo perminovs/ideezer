@@ -1,0 +1,15 @@
+{% extends "ideezer/base.html" %}
+
+{% block title %} Auth {% endblock %}
+
+{% block h1 %} Auth {% endblock %}
+
+{% block content %}
+
+<form action="{% url 'auth' %}" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Ok" />
+</form>
+
+{% endblock %}

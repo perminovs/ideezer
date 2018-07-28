@@ -1,0 +1,11 @@
+{% extends "ideezer/base.html" %}
+
+{% block title %} iDeezer Tracks {% endblock %}
+
+{% block h1 %} Tracks {% endblock %}
+
+{% block content %}
+    {% for obj in object_list %}
+        <li> {{ obj }} </li>
+    {% endfor %}
+{% endblock %}

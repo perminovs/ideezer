@@ -1,3 +1,7 @@
 from django.contrib import admin
+from . import models as md
 
-# Register your models here.
+admin.site.register(md.UserTrack)
+admin.site.register(md.DeezerTrack)
+admin.site.register(md.Playlist)
+admin.site.register(md.TrackIdentity)

@@ -1,0 +1,11 @@
+{% extends "ideezer/base.html" %}
+
+{% block title %} iDeezer {% endblock %}
+
+{% block h1 %} iDeezer {% endblock %}
+
+{% block content %}
+    Welcome to iDeezer - music migration service from iTunes to Deezer.<br/><br/>
+    <li> <a href="{% url 'track_list' %}">Tracks</a> </li>
+    <li> <a href="{% url 'playlist_list' %}">Playlists</a> </li>
+{% endblock %}
