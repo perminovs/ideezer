@@ -1,13 +1,9 @@
 from django.contrib.auth import login, logout as __logout__
 from django.contrib.auth.forms import AuthenticationForm
 from django.views import generic as gc
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 
 from . import models as md
-
-
-def main_page(request):
-    return render(request, 'ideezer/main.html')
 
 
 class AuthFormView(gc.FormView):
@@ -26,12 +22,26 @@ def logout(request):
     return redirect('main')
 
 
-class TrackListView(gc.ListView):
+class UserFilterViewMixin:
+    def get_queryset(self):
+        return self.model.by_user(user=self.request.user)
+
+
+class TrackListView(UserFilterViewMixin, gc.ListView):
     template_name = 'ideezer/track_list.html'
     model = md.UserTrack
 
 
-class PlaylistListView(gc.ListView):
+class TrackDetailView(UserFilterViewMixin, gc.DetailView):
+    template_name = 'ideezer/track_detail.html'
+    model = md.UserTrack
+
+
+class PlaylistListView(UserFilterViewMixin, gc.ListView):
     template_name = 'ideezer/playlist_list.html'
     model = md.Playlist
 
+
+class PlaylistDetailView(UserFilterViewMixin, gc.DetailView):
+    template_name = 'ideezer/playlist_detail.html'
+    model = md.Playlist

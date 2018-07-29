@@ -15,6 +15,7 @@ Including another URLconf
 """
 
 from django.urls import path
+from django.views.generic import TemplateView
 
 from . import views
 
@@ -22,6 +23,8 @@ urlpatterns = [
     path(r'auth', views.AuthFormView.as_view(), name='auth'),
     path(r'logout', views.logout, name='logout'),
     path(r'tracks', views.TrackListView.as_view(), name='track_list'),
+    path(r'track/<int:pk>', views.TrackDetailView.as_view(), name='track_detail'),
     path(r'playlists', views.PlaylistListView.as_view(), name='playlist_list'),
-    path(r'', views.main_page, name='main'),
+    path(r'playlist/<int:pk>', views.PlaylistDetailView.as_view(), name='playlist_detail'),
+    path(r'', TemplateView.as_view(template_name='ideezer/main.html'), name='main'),
 ]

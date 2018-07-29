@@ -1,0 +1,26 @@
+{% extends "ideezer/base.html" %}
+
+{% block title %} iDeezer Playlist {% endblock %}
+
+{% block h1 %} Playlist {% endblock %}
+
+{% block links %}
+    <a href="{% url 'playlist_list' %}">Playlists</a><br/><br/>
+{% endblock %}
+
+{% block content %}
+
+    {% if object.itunes_id %}
+        {{ object.str_itunes }}
+        {% for obj in object.itunes_content.all %}
+            <li> {{ obj }} </li>
+        {% endfor %}
+    <br/>
+    {% endif %}
+    {% if object.deezer_id %}
+        {{ object.str_deezer }}
+        {% for obj in object.deezer_content.all %}
+            <li> {{ obj }} </li>
+        {% endfor %}
+    {% endif %}
+{% endblock %}

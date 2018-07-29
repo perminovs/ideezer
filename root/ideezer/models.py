@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from django.contrib.auth.models import User
 
 
@@ -19,7 +20,14 @@ class BaseTrack(models.Model):
         )
 
 
-class UserTrack(BaseTrack):
+class UserFilterModelMixin:
+    @classmethod
+    def by_user(cls, user):
+        user = user if user.is_authenticated else None
+        return cls.objects.filter(user=user)
+
+
+class UserTrack(BaseTrack, UserFilterModelMixin):
     itunes_id = models.IntegerField()  # id from iTunes xml
     # `s_`-attribute for track search by Deezer API.
     # By default are the same as attributes without `s_`
@@ -33,6 +41,12 @@ class UserTrack(BaseTrack):
         unique_together = (
             ('user', 'itunes_id')
         )
+
+    def __str__(self):
+        return super(UserTrack, self).__str__() + ' ({})'.format(self.user)
+
+    def get_absolute_url(self):
+        return reverse('track_detail', args=[self.id])
 
 
 class DeezerTrack(BaseTrack):
@@ -54,27 +68,39 @@ class TrackIdentity(models.Model):
         )
 
 
-class Playlist(models.Model):
+class Playlist(models.Model, UserFilterModelMixin):
     itunes_id = models.IntegerField(null=True, blank=True)
     itunes_title = models.CharField(max_length=255, null=True, blank=True)
     itunes_content = models.ManyToManyField(UserTrack, blank=True)
+
+    # denormalization
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     deezer_id = models.IntegerField(null=True, blank=True)
     deezer_title = models.CharField(max_length=255, null=True, blank=True)
     deezer_content = models.ManyToManyField(DeezerTrack, blank=True)
 
+    def get_absolute_url(self):
+        return reverse('playlist_detail', args=[self.id])
+
     def __str__(self):
-        result = []
+        return ' | '.join(part for part in (
+            self.str_itunes(), self.str_deezer()
+        ) if part)
+
+    def str_itunes(self):
         if self.itunes_title:
-            result.append('{} ({} iTunes tracks)'.format(
-                self.itunes_title, self.itunes_content.count()
-            ))
+            return '{} ({} iTunes tracks) ({})'.format(
+                self.itunes_title, self.itunes_content.count(),
+                self.user,
+            )
+
+    def str_deezer(self):
         if self.deezer_title:
-            result.append('{} ({} Deezer tracks)'.format(
-                self.deezer_title, self.deezer_content.count()
-            ))
-        return ' | '.join(result)
+            return '{} ({} Deezer tracks)'.format(
+                self.deezer_title, self.deezer_content.count(),
+            )
 
     # TODO validation while save:
     # `itunes_title` and `deezer_title` cannot be NULL together
-    # `_title` cannot be NULL if `_id` IS NOT NULL
+    # `{}_title` cannot be NULL if `{}_id` IS NOT NULL
