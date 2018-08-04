@@ -120,6 +120,14 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+
+# Deezer app params
+DEEZER_APP_ID = -1
+DEEZER_APP_NAME = ''
+DEEZER_SECRET_KEY = ''
+DEEZER_BASE_PERMS = 'basic_access,email'
+
+
 try:
     # private config
     from ._overload_settings import *
