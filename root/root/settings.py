@@ -26,6 +26,7 @@ SECRET_KEY = '%frkmb6#d!l*-1mniyc1%(3@d*ujz7tjwd0wexs_rn$ic1f*2$'
 DEBUG = True
 
 ALLOWED_HOSTS = []
+INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -113,6 +114,39 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'general': {
+            'format': '[%(asctime)s] <%(levelname)s> %(message)s',
+            'datefmt': '%d/%b/%Y %H:%M:%S',
+        },
+    },
+
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'general',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'general',
+            'filename': os.path.join(os.getcwd(), 'log.log'),
+        },
+    },
+
+    'loggers': {
+        'ideezer': {
+            'level': 'INFO',
+            'handlers': ['console', 'file'],
+        }
+    },
+}
+
 
 
 # Static files (CSS, JavaScript, Images)

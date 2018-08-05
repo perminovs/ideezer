@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import login, logout as __logout__
 from django.contrib.auth.forms import AuthenticationForm
 from django.views import generic as gc
@@ -15,11 +16,13 @@ class AuthFormView(gc.FormView):
 
     def form_valid(self, form):
         login(self.request, form.get_user())
+        messages.success(self.request, 'You have login.')
         return super(AuthFormView, self).form_valid(form)
 
 
 def logout(request):
     __logout__(request)
+    messages.success(request, 'You have logout.')
     return redirect('main')
 
 
@@ -34,12 +37,9 @@ def deezer_redirect(request):
         token, expires_time = d_auth_ctl.get_token(request.GET)
         request.session['token'] = token
         request.session['expires'] = expires_time
-        message = 'Deezer auth success'
+        messages.success(request, 'Deezer auth success')
     except d_auth_ctl.DeezerAuthException as dae:
-        # TODO log exception
-        message = 'Deezer auth error'
-
-    # TODO show message
+        messages.error(request, 'Deezer auth was unsuccessful: {}'.format(dae))
 
     _redirect = request.session.pop('redirect', 'main')
     return redirect(_redirect)

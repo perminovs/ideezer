@@ -2,18 +2,31 @@ from datetime import datetime, timedelta
 import requests
 from django.conf import settings
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 __dt_format = '%Y.%m.%d %H:%M:%S'
 
 
 class DeezerAuthException(Exception):
-    def __init__(self, error, error_reason):
+    def __init__(self, error, error_reason, url=None):
         self.error = error
         self.error_reason = error_reason
+        self.url = url
+
+    def __str__(self):
+        url = ', url: {}'.format(self.url) if self.url else ''
+        return 'error: "{}", error_reason: "{}"{}'.format(
+            self.error, self.error_reason, url
+        )
 
 
 def build_auth_uri(redirect_uri):
     """ Returns url to login user on deezer.com
     """
+    redirect_uri = redirect_uri.replace('127.0.0.1', 'localhost')  # FIXME
     return (
         'https://connect.deezer.com/oauth/auth.php?app_id={app_id}&'
         'redirect_uri={redirect_uri}&perms={perms}'.format(
@@ -29,6 +42,7 @@ def get_token(GET):
     """
     code = GET.get('code', None)
     if not code:
+        logger.error('auth rejected')
         raise DeezerAuthException(
             error=GET.get('error', None),
             error_reason=GET.get('error_reason', None)
@@ -40,6 +54,12 @@ def get_token(GET):
         'code': code
     }
     resp = requests.post(url, params)
+    if not resp.ok:
+        # TODO raise especial error and process by middleware
+        logger.error('response is not ok')
+        raise DeezerAuthException(
+            error=resp.status_code, error_reason=resp.reason, url=url
+        )
     resp_text = resp.text
     resp_text = resp_text.replace('access_token=', '')
     idx = resp_text.rfind('&expires=')

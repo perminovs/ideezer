@@ -4,7 +4,14 @@
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
-    <h1> {% block h1 %} {% endblock %} </h1>
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        {% if message.tags %} <div class="{{ message.tags }}"></div>{% endif %}
+            {{ message }}
+        {% endfor %}
+    </div>
+    {% endif %}
 
     {% if user.is_authenticated %}
         Hello, {{ user }}! <br/>
@@ -12,20 +19,26 @@
     {% else %}
         <a href="{% url 'auth' %}"> Sign In </a><br/>
     {% endif %}
-    <br/>
 
+    {% block links %}<br/>{% endblock %}
     <a href="{% url 'main' %}"> Main page</a><br/>
     {% if user.is_authenticated %}
         <a href="{% url 'deezer_auth' %}"> Deezer auth </a><br/>
     {% endif %}
 
-    {% block links %}<br/>{% endblock %}
+    <h1> {% block h1 %} {% endblock %} </h1>
 
     {% block content %}{% endblock %}
 
     <hr>
     {% block footer %}{% endblock %}
     iDeezer 2018
+    <a href="{% url 'license' %}"> License </a><br/>
+
+    <hr>
+    {% for sql_query in sql_queries %}
+        <li> {{ sql_query.sql }} <br/> {{ sql_query.time }} sec </li>
+    {% endfor %}
 </body>
 
 </html>
