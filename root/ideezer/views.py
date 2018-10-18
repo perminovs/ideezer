@@ -1,21 +1,28 @@
 from django.contrib import messages
-from django.contrib.auth import login, logout as __logout__
+from django.contrib.auth import login as __login__, logout as __logout__
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
 from django.views import generic as gc
 from django.shortcuts import redirect
+
+import logging
 
 from . import models as md
 from .controllers import deezer_auth as d_auth_ctl
 
 
+logger = logging.getLogger(__name__)
+
+
 class AuthFormView(gc.FormView):
+    # FIXME `next` param from @login_required does not work
     form_class = AuthenticationForm
     template_name = 'ideezer/auth_form.html'
 
     success_url = '/ideezer/'
 
     def form_valid(self, form):
-        login(self.request, form.get_user())
+        __login__(self.request, form.get_user())
         messages.success(self.request, 'You have login.')
         return super(AuthFormView, self).form_valid(form)
 
@@ -26,22 +33,25 @@ def logout(request):
     return redirect('main')
 
 
+@login_required
 def deezer_auth(request):
-    redirect_uri = request.build_absolute_uri('deezer_redirect')
-    auth_uri = d_auth_ctl.build_auth_uri(redirect_uri)
-    return redirect(auth_uri)
+    url = d_auth_ctl.build_auth_url(request)
+    return redirect(url)
 
 
+@login_required
 def deezer_redirect(request):
     try:
         token, expires_time = d_auth_ctl.get_token(request.GET)
         request.session['token'] = token
         request.session['expires'] = expires_time
         messages.success(request, 'Deezer auth success')
-    except d_auth_ctl.DeezerAuthException as dae:
-        messages.error(request, 'Deezer auth was unsuccessful: {}'.format(dae))
+        logger.info('auth success for {}'.format(request.user))
+        _redirect = request.session.pop('redirect', 'main')
+    except d_auth_ctl.DeezerAuthException:
+        messages.error(request, 'Deezer auth was unsuccessful')
+        _redirect = 'main'
 
-    _redirect = request.session.pop('redirect', 'main')
     return redirect(_redirect)
 
 

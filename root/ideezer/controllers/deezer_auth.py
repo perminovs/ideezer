@@ -23,9 +23,15 @@ class DeezerAuthException(Exception):
         )
 
 
-def build_auth_uri(redirect_uri):
+def build_auth_url(request):
     """ Returns url to login user on deezer.com
     """
+    redirect_uri = request.build_absolute_uri('deezer_redirect')
+    url = __build_auth_url(redirect_uri)
+    return url
+
+
+def __build_auth_url(redirect_uri):
     redirect_uri = redirect_uri.replace('127.0.0.1', 'localhost')  # FIXME
     return (
         'https://connect.deezer.com/oauth/auth.php?app_id={app_id}&'
@@ -42,7 +48,7 @@ def get_token(GET):
     """
     code = GET.get('code', None)
     if not code:
-        logger.error('auth rejected')
+        logger.warning('auth rejected')
         raise DeezerAuthException(
             error=GET.get('error', None),
             error_reason=GET.get('error_reason', None)
@@ -55,8 +61,9 @@ def get_token(GET):
     }
     resp = requests.post(url, params)
     if not resp.ok:
-        # TODO raise especial error and process by middleware
         logger.error('response is not ok')
+        logger.error('resp.status_code: {}, resp.reason: {}'.format(
+            resp.status_code, resp.reason))
         raise DeezerAuthException(
             error=resp.status_code, error_reason=resp.reason, url=url
         )
