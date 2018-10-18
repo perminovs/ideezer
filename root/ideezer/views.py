@@ -1,11 +1,11 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import login as __login__, logout as __logout__
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.views import generic as gc
 from django.shortcuts import redirect
-
-import logging
 
 from . import models as md
 from .controllers import deezer_auth as d_auth_ctl
@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class AuthFormView(gc.FormView):
-    # FIXME `next` param from @login_required does not work
     form_class = AuthenticationForm
     template_name = 'ideezer/auth_form.html'
 
@@ -24,6 +23,14 @@ class AuthFormView(gc.FormView):
     def form_valid(self, form):
         __login__(self.request, form.get_user())
         messages.success(self.request, 'You have login.')
+
+        # FIXME `next` param from @login_required does not work
+        prev = self.request.META.get('HTTP_REFERER', None)
+        if prev and '?next=' in prev:
+            # 'http://localhost:8083/ideezer/auth?next=/ideezer/deezer_auth' ->
+            # -> '/ideezer/deezer_auth'
+            self.success_url = prev[prev.rfind('?next=') + 6:]
+            logger.info('`success_url` changed to {}'.format(self.success_url))
         return super(AuthFormView, self).form_valid(form)
 
 
@@ -42,14 +49,19 @@ def deezer_auth(request):
 @login_required
 def deezer_redirect(request):
     try:
-        token, expires_time = d_auth_ctl.get_token(request.GET)
+        token, expires_time, seconds_left = d_auth_ctl.get_token(request.GET)
         request.session['token'] = token
         request.session['expires'] = expires_time
-        messages.success(request, 'Deezer auth success')
-        logger.info('auth success for {}'.format(request.user))
+        msg = 'Deezer auth success. Token expires in {} min {} sec'.format(
+            seconds_left // 60, seconds_left % 60)
+        messages.success(request, msg)
+        logger.info(
+            'Deezer auth success for {}. Token expires in {} sec'.format(
+                request.user, seconds_left))
         _redirect = request.session.pop('redirect', 'main')
     except d_auth_ctl.DeezerAuthException:
-        messages.error(request, 'Deezer auth was unsuccessful')
+        messages.error(request, 'Deezer auth was unsuccessful for {}'.format(
+            request.user))
         _redirect = 'main'
 
     return redirect(_redirect)

@@ -71,7 +71,7 @@ def get_token(GET):
     resp_text = resp_text.replace('access_token=', '')
     idx = resp_text.rfind('&expires=')
     token = resp_text[:idx]
-    expires = resp_text[idx + len('&expires='):]
-    expires_time = datetime.now() + timedelta(seconds=int(expires))
+    seconds_left = int(resp_text[idx + len('&expires='):])
+    expires_time = datetime.now() + timedelta(seconds=seconds_left)
 
-    return token, expires_time.strftime(__dt_format)
+    return token, expires_time.strftime(__dt_format), seconds_left
