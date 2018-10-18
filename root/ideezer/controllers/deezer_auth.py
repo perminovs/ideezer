@@ -2,10 +2,7 @@ from datetime import datetime, timedelta
 import requests
 from django.conf import settings
 
-import logging
-
-
-logger = logging.getLogger(__name__)
+from . import logger
 
 __dt_format = '%Y.%m.%d %H:%M:%S'
 
@@ -43,15 +40,15 @@ def __build_auth_url(redirect_uri):
     )
 
 
-def get_token(GET):
+def get_token(request):
     """ Run after application authorized and get `token` and its `expires_time`
     """
-    code = GET.get('code', None)
+    code = request.GET.get('code', None)
     if not code:
-        logger.warning('auth rejected')
+        logger.warning('auth rejected', request)
         raise DeezerAuthException(
-            error=GET.get('error', None),
-            error_reason=GET.get('error_reason', None)
+            error=request.GET.get('error', None),
+            error_reason=request.GET.get('error_reason', None)
         )
 
     url = 'https://connect.deezer.com/oauth/access_token.php?'
@@ -61,9 +58,10 @@ def get_token(GET):
     }
     resp = requests.post(url, params)
     if not resp.ok:
-        logger.error('response is not ok')
+        logger.error('response is not ok', request)
         logger.error('resp.status_code: {}, resp.reason: {}'.format(
-            resp.status_code, resp.reason))
+            resp.status_code, resp.reason),
+            request)
         raise DeezerAuthException(
             error=resp.status_code, error_reason=resp.reason, url=url
         )
