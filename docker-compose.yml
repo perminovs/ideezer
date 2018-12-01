@@ -1,0 +1,16 @@
+version: '3'
+services:
+
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: ideezer
+      POSTGRES_DB: ideezer
+      POSTGRES_PASSWORD: 51fa5866c8ce751dda8048f1f092c65274637e40
+    volumes:
+      - psql_data:/var/lib/postgresql/data
+
+volumes:
+  psql_data:
