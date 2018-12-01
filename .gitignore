@@ -16,7 +16,6 @@ venv/
 venv
 
 # settings
-_overload*
 
 # log files
 *.log

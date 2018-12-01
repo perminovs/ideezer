@@ -84,6 +84,20 @@ DATABASES = {
     }
 }
 
+_db_params = {
+    'ENGINE': os.environ.get('DB_ENGINE', None),
+    'NAME': os.environ.get('DB_NAME', None),
+    'USER': os.environ.get('DB_USER', None),
+    'PASSWORD': os.environ.get('DB_PASSWORD', None),
+    'HOST': os.environ.get('DB_HOST', None),
+    'PORT': os.environ.get('DB_PORT', None),
+}
+if all(_db_params.values()):
+    DATABASES['default'] = _db_params
+else:
+    import logging
+    logger = logging.getLogger()
+    logger.warning('run with sqlite db')
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
@@ -150,7 +164,6 @@ LOGGING = {
 }
 
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
@@ -158,14 +171,16 @@ STATIC_URL = '/static/'
 
 
 # Deezer app params
-DEEZER_APP_ID = -1
-DEEZER_APP_NAME = ''
-DEEZER_SECRET_KEY = ''
+DEEZER_APP_ID = os.environ.get('DEEZER_APP_ID', None)
+DEEZER_APP_NAME = os.environ.get('DEEZER_APP_NAME', None)
+DEEZER_SECRET_KEY = os.environ.get('DEEZER_SECRET_KEY', None)
 DEEZER_BASE_PERMS = 'basic_access,email'
 
-
-try:
-    # private config
-    from ._overload_settings import *
-except ImportError:
-    pass
+for param, name in zip(
+    (DEEZER_APP_ID, DEEZER_APP_NAME, DEEZER_SECRET_KEY),
+    ('DEEZER_APP_ID', 'DEEZER_APP_NAME', 'DEEZER_SECRET_KEY'),
+):
+    if not param:
+        import logging
+        logger = logging.getLogger()
+        logger.warning('env var `%s` is not defined', name)
