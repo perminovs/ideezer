@@ -8,4 +8,6 @@ done
 
 echo "PostgreSQL started"
 
-python ./root/manage.py runserver 0.0.0.0:5000
+python manage.py makemigrations && python manage.py migrate
+
+gunicorn wsgi -b 0.0.0.0:8000 --workers 3

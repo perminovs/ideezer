@@ -15,12 +15,22 @@ services:
       DB_PORT: 5432
     depends_on:
       - db
+    expose:
+      - "8000"
+
+  nginx:
+    image: "psi/ideezer-nginx"
+    build:
+      context: .
+      dockerfile: docker/Docker.nginx
     ports:
-      - 5000:5000
+      - 80:8000
+    depends_on:
+      - web
 
   db:
     image: postgres
-    ports:
+    ports:  # FIXME for tesing only; remove for production
       - 5432:5432
     environment:
       POSTGRES_USER: ideezer
