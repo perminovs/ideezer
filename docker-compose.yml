@@ -1,6 +1,23 @@
 version: '3'
 services:
 
+  web:
+    image: "psi/ideezer"
+    build:
+      context: .
+      dockerfile: docker/Docker.web
+    environment:
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: ideezer
+      DB_USER: ideezer
+      DB_PASSWORD: 51fa5866c8ce751dda8048f1f092c65274637e40
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      - db
+    ports:
+      - 5000:5000
+
   db:
     image: postgres
     ports:

@@ -1,0 +1,18 @@
+FROM python:3
+
+RUN apt-get update && \
+    apt-get install -y net-tools netcat
+
+    # apt-get install -y gcc python3-dev && netcat
+
+WORKDIR /app
+
+COPY ./root/requirements.txt /app/requirements.txt
+RUN pip install --no-cache -r /app/requirements.txt
+
+COPY ./root/entrypoint_web.sh /app/entrypoint_web.sh
+RUN chmod +x /app/entrypoint_web.sh
+
+COPY . /app
+
+CMD sh /app/entrypoint_web.sh
