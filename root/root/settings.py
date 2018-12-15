@@ -25,7 +25,7 @@ SECRET_KEY = '%frkmb6#d!l*-1mniyc1%(3@d*ujz7tjwd0wexs_rn$ic1f*2$'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['web']
+ALLOWED_HOSTS = ['web', '127.0.0.1', 'localhost']
 INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
 LOGIN_URL = '/ideezer/auth'

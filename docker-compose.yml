@@ -29,7 +29,7 @@ services:
       - web
 
   db:
-    image: postgres
+    image: postgres:11
     ports:  # FIXME for tesing only; remove for production
       - 5432:5432
     environment:
