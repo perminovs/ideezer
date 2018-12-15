@@ -14,7 +14,7 @@ class AuthFormView(gc.FormView):
     form_class = AuthenticationForm
     template_name = 'ideezer/auth_form.html'
 
-    success_url = '/ideezer/'
+    success_url = '/'
 
     def form_valid(self, form):
         __login__(self.request, form.get_user())

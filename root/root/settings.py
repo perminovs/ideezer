@@ -11,9 +11,18 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+import pathlib
+import logging
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import environ
+
+
+PROJECT_DIR = pathlib.Path(__file__).parent
+STATIC_URL = '/static/'
+STATIC_ROOT = PROJECT_DIR / STATIC_URL
+
+env = environ.Env(DEBUG=(bool, False))
+environ.Env.read_env()
 
 
 # Quick-start development settings - unsuitable for production
@@ -25,7 +34,10 @@ SECRET_KEY = '%frkmb6#d!l*-1mniyc1%(3@d*ujz7tjwd0wexs_rn$ic1f*2$'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['web', '127.0.0.1', 'localhost']
+HOSTNAME = env('HOSTNAME', default='')
+SERVICE_NAME = env('SERVIC_NAME', default='web')
+
+ALLOWED_HOSTS = [SERVICE_NAME, '127.0.0.1', 'localhost']
 INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
 LOGIN_URL = '/ideezer/auth'
@@ -74,30 +86,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'root.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    'default': env.db(),
 }
 
-_db_params = {
-    'ENGINE': os.environ.get('DB_ENGINE', None),
-    'NAME': os.environ.get('DB_NAME', None),
-    'USER': os.environ.get('DB_USER', None),
-    'PASSWORD': os.environ.get('DB_PASSWORD', None),
-    'HOST': os.environ.get('DB_HOST', None),
-    'PORT': os.environ.get('DB_PORT', None),
-}
-if all(_db_params.values()):
-    DATABASES['default'] = _db_params
-else:
-    import logging
-    logger = logging.getLogger()
-    logger.warning('run with sqlite db')
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
@@ -164,27 +156,17 @@ LOGGING = {
 }
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.0/howto/static-files/
-
-# STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
-STATIC_URL = '/static/'
-
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
+# check Deezer app params
+DEEZER_APP_ID = env('DEEZER_APP_ID', default=None)
+DEEZER_APP_NAME = env('DEEZER_APP_NAME', default=None)
+DEEZER_SECRET_KEY = env('DEEZER_SECRET_KEY', default=None)
+DEEZER_BASE_PERMS = env('DEEZER_BASE_PERMS', default='basic_access,email')
 
 
-# Deezer app params
-DEEZER_APP_ID = os.environ.get('DEEZER_APP_ID', None)
-DEEZER_APP_NAME = os.environ.get('DEEZER_APP_NAME', None)
-DEEZER_SECRET_KEY = os.environ.get('DEEZER_SECRET_KEY', None)
-DEEZER_BASE_PERMS = 'basic_access,email'
-
+logger = logging.getLogger()
 for param, name in zip(
     (DEEZER_APP_ID, DEEZER_APP_NAME, DEEZER_SECRET_KEY),
     ('DEEZER_APP_ID', 'DEEZER_APP_NAME', 'DEEZER_SECRET_KEY'),
 ):
     if not param:
-        import logging
-        logger = logging.getLogger()
         logger.warning('env var `%s` is not defined', name)

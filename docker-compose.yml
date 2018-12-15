@@ -7,12 +7,9 @@ services:
       context: .
       dockerfile: docker/Docker.web
     environment:
-      DB_ENGINE: django.db.backends.postgresql
-      DB_NAME: ideezer
-      DB_USER: ideezer
-      DB_PASSWORD: 51fa5866c8ce751dda8048f1f092c65274637e40
-      DB_HOST: db
-      DB_PORT: 5432
+      DATABASE_URL: psql://ideezer:51fa5866c8ce751dda8048f1f092c65274637e40@db:5432/ideezer
+      HOSTNAME: localhost
+      SERVICE_NAME: web
     depends_on:
       - db
     expose:

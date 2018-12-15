@@ -24,12 +24,27 @@ def build_auth_url(request):
     """ Returns url to login user on deezer.com
     """
     redirect_uri = request.build_absolute_uri('deezer_redirect')
-    url = __build_auth_url(redirect_uri)
+    url = __build_auth_url(redirect_uri, request)
     return url
 
 
-def __build_auth_url(redirect_uri):
+def __build_auth_url(redirect_uri, request):
     redirect_uri = redirect_uri.replace('127.0.0.1', 'localhost')  # FIXME
+
+    # браузер должен получить url типа `http://hostname/...`
+    # вместо `http://web/...`
+    # где `hostname` - реальный домен машины, например, locahost
+    # (этот запрос придёт в nginx);
+    # `web` - имя сервиса, по которому nginx проксирует запрос в gunicorn
+    if settings.HOSTNAME:
+        http_host = request.META.get('HTTP_HOST')
+        logger.info('source redirect_uri: {}'.format(redirect_uri), None)
+        redirect_uri = redirect_uri.replace(
+            'http://{service}/'.format(service=http_host),
+            'http://{host}/'.format(host=settings.HOSTNAME),
+        )
+        logger.info('fixed redirect_uri: {}'.format(redirect_uri), None)
+
     return (
         'https://connect.deezer.com/oauth/auth.php?app_id={app_id}&'
         'redirect_uri={redirect_uri}&perms={perms}'.format(

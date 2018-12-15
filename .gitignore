@@ -37,3 +37,5 @@ tests/.coverage
 build/
 tests/report/
 **/static
+
+.env
