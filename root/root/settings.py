@@ -163,7 +163,7 @@ DEEZER_SECRET_KEY = env('DEEZER_SECRET_KEY', default=None)
 DEEZER_BASE_PERMS = env('DEEZER_BASE_PERMS', default='basic_access,email')
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 for param, name in zip(
     (DEEZER_APP_ID, DEEZER_APP_NAME, DEEZER_SECRET_KEY),
     ('DEEZER_APP_ID', 'DEEZER_APP_NAME', 'DEEZER_SECRET_KEY'),

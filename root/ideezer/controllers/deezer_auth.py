@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
+import logging
+
 import requests
 from django.conf import settings
 
-from . import logger
-
+logger = logging.getLogger(__name__)
 __dt_format = '%Y.%m.%d %H:%M:%S'
 
 
@@ -37,13 +38,14 @@ def __build_auth_url(redirect_uri, request):
     # (этот запрос придёт в nginx);
     # `web` - имя сервиса, по которому nginx проксирует запрос в gunicorn
     if settings.HOSTNAME:
+        _src_uri = redirect_uri
         http_host = request.META.get('HTTP_HOST')
-        logger.info('source redirect_uri: {}'.format(redirect_uri), None)
         redirect_uri = redirect_uri.replace(
             'http://{service}/'.format(service=http_host),
             'http://{host}/'.format(host=settings.HOSTNAME),
         )
-        logger.info('fixed redirect_uri: {}'.format(redirect_uri), None)
+        logger.info('redirect_uri was changed from: `{}` to `{}`'.format(
+            _src_uri, redirect_uri))
 
     return (
         'https://connect.deezer.com/oauth/auth.php?app_id={app_id}&'
@@ -60,7 +62,7 @@ def get_token(request):
     """
     code = request.GET.get('code', None)
     if not code:
-        logger.warning('auth rejected', request)
+        logger.warning('auth rejected',)
         raise DeezerAuthException(
             error=request.GET.get('error', None),
             error_reason=request.GET.get('error_reason', None)
@@ -73,10 +75,10 @@ def get_token(request):
     }
     resp = requests.post(url, params)
     if not resp.ok:
-        logger.error('response is not ok', request)
+        logger.error('response is not ok')
         logger.error('resp.status_code: {}, resp.reason: {}'.format(
-            resp.status_code, resp.reason),
-            request)
+            resp.status_code, resp.reason
+        ))
         raise DeezerAuthException(
             error=resp.status_code, error_reason=resp.reason, url=url
         )

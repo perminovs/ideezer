@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import login as __login__, logout as __logout__
 from django.contrib.auth.forms import AuthenticationForm
@@ -7,7 +9,9 @@ from django.shortcuts import redirect
 
 from . import models as md
 from .controllers import deezer_auth as d_auth_ctl
-from .controllers import logger
+
+
+logger = logging.getLogger(__name__)
 
 
 class AuthFormView(gc.FormView):
@@ -28,7 +32,6 @@ class AuthFormView(gc.FormView):
             self.success_url = prev[prev.rfind('?next=') + 6:]
             logger.info(
                 '`success_url` changed to {}'.format(self.success_url),
-                self.request,
             )
         return super(AuthFormView, self).form_valid(form)
 
@@ -36,13 +39,13 @@ class AuthFormView(gc.FormView):
 def logout(request):
     __logout__(request)
     messages.success(request, 'You have logout.')
-    logger.info('logout', request)
+    logger.info('logout')
     return redirect('main')
 
 
 @login_required
 def deezer_auth(request):
-    logger.info('deezer_auth', request)
+    logger.info('deezer_auth')
     url = d_auth_ctl.build_auth_url(request)
     return redirect(url)
 
@@ -58,8 +61,8 @@ def deezer_redirect(request):
         messages.success(request, msg)
         logger.info(
             'Deezer auth success for {}. Token expires in {} sec'.format(
-                request.user, seconds_left),
-            request)
+                request.user, seconds_left
+            ))
         _redirect = request.session.pop('redirect', 'main')
     except d_auth_ctl.DeezerAuthException:
         messages.error(request, 'Deezer auth was unsuccessful for {}'.format(
