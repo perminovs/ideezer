@@ -90,3 +90,26 @@ def get_token(request):
     expires_time = datetime.now() + timedelta(seconds=seconds_left)
 
     return token, expires_time.strftime(__dt_format), seconds_left
+
+
+def about_user(token):
+    url = 'https://api.deezer.com/user/me'
+    resp = requests.get(url, {'access_token': token})
+    if not resp.ok:
+        logger.error('response is not ok')
+        logger.error('resp.status_code: {}, resp.reason: {}'.format(
+            resp.status_code, resp.reason
+        ))
+        raise DeezerAuthException(
+            error=resp.status_code, error_reason=resp.reason, url=url
+        )
+    info = resp.json()
+
+    error = info.get('error')
+    if info.get('error'):
+        logger.error('auth error: %s', error)
+        raise DeezerAuthException(
+            error=error, error_reason=resp.reason, url=url
+        )
+
+    return info.get('id')

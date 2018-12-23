@@ -20,10 +20,8 @@ from django.views.generic import TemplateView
 from . import views
 
 urlpatterns = [
-    path(r'auth', views.AuthFormView.as_view(), name='auth'),
     path(r'deezer_auth', views.deezer_auth, name='deezer_auth'),
     path(r'deezer_redirect', views.deezer_redirect, name='deezer_redirect'),
-    path(r'logout', views.logout, name='logout'),
     path(r'tracks', views.TrackListView.as_view(), name='track_list'),
     path(r'track/<int:pk>', views.TrackDetailView.as_view(), name='track_detail'),
     path(r'playlists', views.PlaylistListView.as_view(), name='playlist_list'),

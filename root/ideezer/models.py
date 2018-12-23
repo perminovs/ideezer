@@ -1,6 +1,5 @@
 from django.db import models
 from django.urls import reverse
-from django.contrib.auth.models import User
 
 
 ITUNES = 'itunes'
@@ -25,14 +24,16 @@ class BaseTrack(models.Model):
         )
 
 
-class UserFilterModelMixin:
-    @classmethod
-    def by_user(cls, user):
-        user = user if user.is_authenticated else None
-        return cls.objects.filter(user=user)
+class _Manager(models.Manager):
+    def by_user(self, user_id):
+        return self.filter(user_id=user_id)
 
 
-class UserTrack(BaseTrack, UserFilterModelMixin):
+class User(models.Model):
+    deezer_id = models.IntegerField(unique=True)
+
+
+class UserTrack(BaseTrack):
     itunes_id = models.IntegerField()  # id from iTunes xml
     # `s_`-attribute for track search by Deezer API.
     # By default are the same as attributes without `s_`
@@ -41,6 +42,8 @@ class UserTrack(BaseTrack, UserFilterModelMixin):
     s_album = models.CharField(max_length=255, null=True, blank=True)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    objects = _Manager()
 
     class Meta:
         unique_together = (
@@ -51,7 +54,7 @@ class UserTrack(BaseTrack, UserFilterModelMixin):
         return super(UserTrack, self).__str__() + ' ({})'.format(self.user)
 
     def get_absolute_url(self):
-        return reverse('track_detail', args=[self.id])
+        return reverse('track_detail', args=[self.pk])
 
 
 class DeezerTrack(BaseTrack):
@@ -69,11 +72,12 @@ class TrackIdentity(models.Model):
 
     class Meta:
         unique_together = (
-            ('user_track', 'deezer_track', 'choosen')
+            ('user_track', 'deezer_track'),
+            ('user_track', 'deezer_track', 'choosen'),
         )
 
 
-class Playlist(models.Model, UserFilterModelMixin):
+class Playlist(models.Model):
     itunes_id = models.IntegerField(null=True, blank=True)
     itunes_title = models.CharField(max_length=255, null=True, blank=True)
     itunes_content = models.ManyToManyField(UserTrack, blank=True)
@@ -85,13 +89,15 @@ class Playlist(models.Model, UserFilterModelMixin):
     deezer_title = models.CharField(max_length=255, null=True, blank=True)
     deezer_content = models.ManyToManyField(DeezerTrack, blank=True)
 
+    objects = _Manager()
+
     class Meta:
         unique_together = (
             ('user', 'itunes_id')
         )
 
     def get_absolute_url(self):
-        return reverse('playlist_detail', args=[self.id])
+        return reverse('playlist_detail', args=[self.pk])
 
     def __str__(self):
         return ' | '.join(
@@ -123,7 +129,7 @@ class Playlist(models.Model, UserFilterModelMixin):
         _content = getattr(self, source + '_content')
 
         count_section = ''
-        if self.id:  # can we use many-to-many relationship?
+        if self.pk:  # can we use many-to-many relationship?
             count_section = ' ({} {} tracks)'.format(
                 _content.count(), source_names[source]
             )
@@ -135,7 +141,7 @@ class Playlist(models.Model, UserFilterModelMixin):
         if err:
             raise ValueError(err)
 
-        if self.id:  # can we use many-to-many relationship?
+        if self.pk:  # can we use many-to-many relationship?
             # Check playlist contains only tracks from playlist.user
             # Does not work, when saving from admin interface
             for itunes_track in self.itunes_content.all():
