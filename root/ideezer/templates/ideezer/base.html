@@ -2,45 +2,47 @@
 <html lang="en">
 <head>
     {% load staticfiles %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}" />
+    {% load filters %}
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}" />
     <title>{% block title %}{% endblock %}</title>
 </head>
-<body>
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-        {% if message.tags %} <div class="{{ message.tags }}"></div>{% endif %}
-            {{ message }}
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    {% block links %}<br/>{% endblock %}
-    <a href="{% url 'main' %}"> Main page</a><br/>
-    <a href="{% url 'deezer_auth' %}"> Deezer auth </a><br/>
+<body class="container">
 
     <h1> {% block h1 %} {% endblock %} </h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="{% if message.tags %} {{ message.tags|level2class }} {% endif %}"> {{ message }} </div>
+        {% endfor %}
+    {% endif %}
+
+    <ul class="nav">
+        <li class="nav-item>"><a class="nav-link" href="{% url 'main' %}">Main page</a></li>
+        <li class="nav-item>"><a class="nav-link" href="{% url 'deezer_auth' %}">Deezer auth</a></li>
+        {% block links %}{% endblock %}
+    </ul>
 
     {% block content %}{% endblock %}
 
     <hr>
     {% block footer %}{% endblock %}
-    iDeezer 2018
-    <a href="{% url 'license' %}"> License </a><br/>
+    iDeezer 2018 <a href="{% url 'license' %}"> License </a><br/>
+    <br>
 
-    <hr>
-    <h4>We use cookies</h4>
-    <h5>
-        We use cookies and other tracking technologies to improve your browsing experience on our website,<br/>
-        to show you personalized content and targeted ads, to analyze our website traffic, and to understand<br/>
-        where our visitors are coming from. By browsing our website, you consent to our use of cookies<br/>
-        and other tracking technologies.<br/>
-    </h5>
+    <div class="card card-body border-success mb-3">
+        <h6 class="card-title">We use cookies</h6>
+        <small class="card-text text-muted">We use cookies and other tracking technologies to improve your browsing experience on our website,
+        to show you personalized content and targeted ads, to analyze our website traffic, and to understand
+        where our visitors are coming from. By browsing our website, you consent to our use of cookies
+        and other tracking technologies.</small>
+    </div>
 
-    <hr>
+    <ul>
     {% for sql_query in sql_queries %}
-        <li> {{ sql_query.sql }} <br/> {{ sql_query.time }} sec </li>
+        <li class="text-monospace"> {{ sql_query.sql }} <br/> {{ sql_query.time }} sec </li>
     {% endfor %}
+    </ul>
+
 </body>
 
 </html>

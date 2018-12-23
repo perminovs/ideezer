@@ -26,11 +26,14 @@ class BaseTrack(models.Model):
 
 class _Manager(models.Manager):
     def by_user(self, user_id):
-        return self.filter(user_id=user_id)
+        return self.filter(user__deezer_id=user_id)
 
 
 class User(models.Model):
     deezer_id = models.IntegerField(unique=True)
+
+    def __str__(self):
+        return f'User {self.deezer_id}'
 
 
 class UserTrack(BaseTrack):
