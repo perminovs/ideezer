@@ -1,11 +1,24 @@
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import NamedTuple
 
 import requests
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 __dt_format = '%Y.%m.%d %H:%M:%S'
+
+
+class TokenInfo(NamedTuple):
+    token: str
+    expires: str
+    seconds_left: int
+
+
+class AboutUser(NamedTuple):
+    deezer_id: int
+    deezer_name: str
+    picture_url: str
 
 
 class DeezerAuthException(Exception):
@@ -57,7 +70,7 @@ def __build_auth_url(redirect_uri, request):
     )
 
 
-def get_token(request):
+def get_token(request) -> TokenInfo:
     """ Run after application authorized and get `token` and its `expires_time`
     """
     code = request.GET.get('code', None)
@@ -89,10 +102,14 @@ def get_token(request):
     seconds_left = int(resp_text[idx + len('&expires='):])
     expires_time = datetime.now() + timedelta(seconds=seconds_left)
 
-    return token, expires_time.strftime(__dt_format), seconds_left
+    return TokenInfo(
+        token=token,
+        expires=expires_time.strftime(__dt_format),
+        seconds_left=seconds_left,
+    )
 
 
-def about_user(token):
+def about_user(token) -> AboutUser:
     url = 'https://api.deezer.com/user/me'
     resp = requests.get(url, {'access_token': token})
     if not resp.ok:
@@ -106,10 +123,19 @@ def about_user(token):
     info = resp.json()
 
     error = info.get('error')
-    if info.get('error'):
+    deezer_id = info.get('id')
+    deezer_name = info.get('name')
+    if not error and (not deezer_id or not deezer_name):
+        error = (f'unexpected deezer response format: '
+                 f'id: "{deezer_id}", name: "{deezer_name}"')
+    if error:
         logger.error('auth error: %s', error)
         raise DeezerAuthException(
             error=error, error_reason=resp.reason, url=url
         )
 
-    return info.get('id')
+    return AboutUser(
+        deezer_id=deezer_id,
+        deezer_name=deezer_name,
+        picture_url=info.get('picture_small'),
+    )

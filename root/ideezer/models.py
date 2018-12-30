@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 
 
@@ -29,11 +30,12 @@ class _Manager(models.Manager):
         return self.filter(user__deezer_id=user_id)
 
 
-class User(models.Model):
-    deezer_id = models.IntegerField(unique=True)
+class User(AbstractUser):
+    # nullable because admin may has no deezer_id
+    deezer_id = models.IntegerField(unique=True, null=True)
 
     def __str__(self):
-        return f'User {self.deezer_id}'
+        return self.username or f'Deezer user #{self.deezer_id}'
 
 
 class UserTrack(BaseTrack):

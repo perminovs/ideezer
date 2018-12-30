@@ -78,6 +78,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'ideezer.templates.context_processors.deezer_user',
             ],
         },
     },
@@ -155,6 +156,11 @@ LOGGING = {
     },
 }
 
+AUTHENTICATION_BACKENDS = [
+    'ideezer.authbackend.Authbackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+AUTH_USER_MODEL = 'ideezer.User'
 
 # check Deezer app params
 DEEZER_APP_ID = env('DEEZER_APP_ID', default=None)
