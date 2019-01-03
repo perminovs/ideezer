@@ -3,10 +3,11 @@ import logging
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout as __logout__
 from django.views import generic as gc
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 
 from . import models as md
-from .controllers import deezer_auth as d_auth_ctl
+from .controllers import deezer_auth as d_auth_ctl, library
+from .forms import UploadLibraryForm
 
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,19 @@ def logout(request):
     messages.success(request, 'You have logout.')
     logger.info('logout')
     return redirect('main')
+
+
+def upload_library(request):
+    if request.method == 'POST':
+        form = UploadLibraryForm(request.POST, request.FILES)
+        if form.is_valid():  # TODO custom file validation here?
+            library.save(request.FILES['file'])
+            messages.success(request, 'Upload success!')
+            return redirect('main')
+    else:
+        form = UploadLibraryForm()
+
+    return render(request, 'ideezer/itunes_xml_upload.html', {'form': form})
 
 
 class UserFilterViewMixin:

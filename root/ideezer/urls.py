@@ -23,6 +23,7 @@ urlpatterns = [
     path(r'logout', views.logout, name='logout'),
     path(r'deezer_auth', views.deezer_auth, name='deezer_auth'),
     path(r'deezer_redirect', views.deezer_redirect, name='deezer_redirect'),
+    path(r'upload_library', views.upload_library, name='upload_library'),
     path(r'tracks', views.TrackListView.as_view(), name='track_list'),
     path(r'track/<int:pk>', views.TrackDetailView.as_view(), name='track_detail'),
     path(r'playlists', views.PlaylistListView.as_view(), name='playlist_list'),

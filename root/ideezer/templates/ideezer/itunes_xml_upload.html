@@ -1,0 +1,13 @@
+{% extends "ideezer/base.html" %}
+
+{% block title %} Upload {% endblock %}
+
+{% block h1 %} Upload iTunes library {% endblock %}
+
+{% block content %}
+    <form action="/upload_library" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit" value="Submit">
+    </form>
+{% endblock %}
