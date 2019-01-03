@@ -10,6 +10,6 @@ sleep 0.5  # FIXME prevents `django.db.utils.OperationalError: FATAL:  the datab
 echo "PostgreSQL started"
 
 python manage.py makemigrations && python manage.py migrate
-python manage.py collectstatic
+python manage.py collectstatic --noinput
 
 gunicorn wsgi -b 0.0.0.0:8000 --workers 3
