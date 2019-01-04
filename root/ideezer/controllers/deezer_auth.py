@@ -57,8 +57,8 @@ def __build_auth_url(redirect_uri, request):
             'http://{service}/'.format(service=http_host),
             'http://{host}/'.format(host=settings.HOSTNAME),
         )
-        logger.info('redirect_uri was changed from: `{}` to `{}`'.format(
-            _src_uri, redirect_uri))
+        logger.info('redirect_uri was changed from: `%s` to `%s`',
+                    _src_uri, redirect_uri)
 
     return (
         'https://connect.deezer.com/oauth/auth.php?app_id={app_id}&'
@@ -75,7 +75,7 @@ def get_token(request) -> TokenInfo:
     """
     code = request.GET.get('code', None)
     if not code:
-        logger.warning('auth rejected',)
+        logger.warning('auth rejected')
         raise DeezerAuthException(
             error=request.GET.get('error', None),
             error_reason=request.GET.get('error_reason', None)
@@ -89,9 +89,8 @@ def get_token(request) -> TokenInfo:
     resp = requests.post(url, params)
     if not resp.ok:
         logger.error('response is not ok')
-        logger.error('resp.status_code: {}, resp.reason: {}'.format(
-            resp.status_code, resp.reason
-        ))
+        logger.error('resp.status_code: %s, resp.reason: %s',
+                     resp.status_code, resp.reason)
         raise DeezerAuthException(
             error=resp.status_code, error_reason=resp.reason, url=url
         )
@@ -114,9 +113,8 @@ def about_user(token) -> AboutUser:
     resp = requests.get(url, {'access_token': token})
     if not resp.ok:
         logger.error('response is not ok')
-        logger.error('resp.status_code: {}, resp.reason: {}'.format(
-            resp.status_code, resp.reason
-        ))
+        logger.error('resp.status_code: %s, resp.reason: %s',
+                     resp.status_code, resp.reason)
         raise DeezerAuthException(
             error=resp.status_code, error_reason=resp.reason, url=url
         )

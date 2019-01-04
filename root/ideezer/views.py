@@ -40,10 +40,8 @@ def deezer_redirect(request):
         msg = 'Deezer auth success. Token expires in {} min {} sec'.format(
             token_info.seconds_left // 60, token_info.seconds_left % 60)
         messages.success(request, msg)
-        logger.info(
-            'Deezer auth success for {}. Token expires in {} sec'.format(
-                request.user, token_info.seconds_left
-            ))
+        logger.info('Deezer auth success for %s. Token expires in %s sec',
+                    request.user, token_info.seconds_left)
         _redirect = session.pop('redirect', 'main')
 
         for key in SESSION_ATTRIBUTES:
