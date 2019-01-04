@@ -40,7 +40,7 @@ SERVICE_NAME = env('SERVIC_NAME', default='web')
 ALLOWED_HOSTS = [SERVICE_NAME, '127.0.0.1', 'localhost']
 INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
-LOGIN_URL = '/ideezer/auth'
+LOGIN_URL = '/deezer_auth'
 
 
 # Application definition

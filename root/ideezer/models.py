@@ -10,7 +10,7 @@ source_names = {ITUNES: 'iTunes', DEEZER: 'Deezer'}
 
 class BaseTrack(models.Model):
     title = models.CharField(max_length=255)
-    artist = models.CharField(max_length=255)
+    artist = models.CharField(max_length=255, null=True, blank=True)
     album = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
@@ -19,7 +19,7 @@ class BaseTrack(models.Model):
     def __str__(self):
         album = ''
         if self.album:
-            album = '(from {})'.format(self.album)
+            album = ' (from {})'.format(self.album)
         return '{artist} - {title}{album}'.format(
             artist=self.artist, title=self.title, album=album
         )
@@ -27,7 +27,10 @@ class BaseTrack(models.Model):
 
 class _Manager(models.Manager):
     def by_user(self, user_id):
-        return self.filter(user__deezer_id=user_id)
+        return self.filter(user_id=user_id)
+
+    def by_duser(self, duser_id):
+        return self.filter(user__deezer_id=duser_id)
 
 
 class User(AbstractUser):
@@ -61,6 +64,16 @@ class UserTrack(BaseTrack):
     def get_absolute_url(self):
         return reverse('track_detail', args=[self.pk])
 
+    @classmethod
+    def from_itunes(cls, track, user_id):
+        return cls(
+            itunes_id=track.track_id,
+            title=track.name,
+            artist=track.artist,
+            album=track.album,
+            user_id=user_id,
+        )
+
 
 class DeezerTrack(BaseTrack):
     deezer_id = models.IntegerField(unique=True)
@@ -84,6 +97,7 @@ class TrackIdentity(models.Model):
 
 class Playlist(models.Model):
     itunes_id = models.IntegerField(null=True, blank=True)
+    itunes_persistent_id = models.CharField(max_length=255, null=True, blank=True)
     itunes_title = models.CharField(max_length=255, null=True, blank=True)
     itunes_content = models.ManyToManyField(UserTrack, blank=True)
 
@@ -104,42 +118,17 @@ class Playlist(models.Model):
     def get_absolute_url(self):
         return reverse('playlist_detail', args=[self.pk])
 
-    def __str__(self):
-        return ' | '.join(
-            part for part in (self.str_itunes, self.str_deezer) if part
+    @classmethod
+    def from_itunes(cls, playlist, user_id):
+        return cls(
+            itunes_id=playlist.playlist_id,
+            itunes_persistent_id=playlist.playlist_persistent_id,
+            user_id=user_id,
+            itunes_title=playlist.name,
         )
 
-    @property
-    def str_itunes(self):
-        """ <title> (iTunes <track_cnt>) (<owner_name>) """
-        return self.__str(source=ITUNES, with_user=True)
-
-    @property
-    def str_deezer(self):
-        """ <title> (Deezer <track_cnt>) """
-        return self.__str(source=DEEZER, with_user=False)
-
-    def __str(self, source, with_user=False):
-        """ Returns part of playlist string representation
-
-        :param source: 'itunes' or 'deezer'
-        :param with_user: add playlist owner name to result?
-        """
-        assert source in (ITUNES, DEEZER)
-
-        _title = getattr(self, source + '_title')
-        if not _title:
-            return
-        _id = getattr(self, source + '_id')
-        _content = getattr(self, source + '_content')
-
-        count_section = ''
-        if self.pk:  # can we use many-to-many relationship?
-            count_section = ' ({} {} tracks)'.format(
-                _content.count(), source_names[source]
-            )
-        user_section = ' ({})'.format(self.user) if with_user else ''
-        return '{}{}{}'.format(_title, count_section, user_section)
+    def __str__(self):
+        return f'{self.itunes_title} ({self.user})'
 
     def save(self, *args, **kwargs):
         err = self.validate()

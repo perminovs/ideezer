@@ -11,14 +11,12 @@
 {% block content %}
 
     {% if object.itunes_id %}
-        {{ object.str_itunes }}
         {% for obj in object.itunes_content.all %}
             <li> {{ obj }} </li>
         {% endfor %}
     <br/>
     {% endif %}
     {% if object.deezer_id %}
-        {{ object.str_deezer }}
         {% for obj in object.deezer_content.all %}
             <li> {{ obj }} </li>
         {% endfor %}

@@ -2,6 +2,7 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout as __logout__
+from django.contrib.auth.decorators import login_required
 from django.views import generic as gc
 from django.shortcuts import redirect, render
 
@@ -66,12 +67,14 @@ def logout(request):
     return redirect('main')
 
 
+@login_required
 def upload_library(request):
     if request.method == 'POST':
         form = UploadLibraryForm(request.POST, request.FILES)
         if form.is_valid():  # TODO custom file validation here?
-            library.save(request.FILES['file'])
-            messages.success(request, 'Upload success!')
+            library.save(file=request.FILES['file'], user=request.user)
+            messages.success(
+                request, 'Upload success. Processing make take a few minutes.')
             return redirect('main')
     else:
         form = UploadLibraryForm()
@@ -86,8 +89,8 @@ class PaginatedViewMixin:
 
 class UserFilterViewMixin:
     def get_queryset(self):
-        user_id = self.request.session.get('duser_id')
-        return self.model.objects.by_user(user_id=user_id)
+        duser_id = self.request.session.get('duser_id')
+        return self.model.objects.by_duser(duser_id=duser_id)
 
 
 class TrackListView(UserFilterViewMixin, PaginatedViewMixin, gc.ListView):

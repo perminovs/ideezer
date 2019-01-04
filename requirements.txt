@@ -4,3 +4,4 @@ requests
 gunicorn
 gevent
 django-environ
+git+git://github.com/perminovs/libpytunes@playlist_attributes
