@@ -1,6 +1,6 @@
-Django==2.0.7
-psycopg2-binary==2.7.5
-requests==2.19.1
+Django
+psycopg2-binary
+requests
 gunicorn
 gevent
 django-environ
