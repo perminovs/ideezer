@@ -79,13 +79,18 @@ def upload_library(request):
     return render(request, 'ideezer/itunes_xml_upload.html', {'form': form})
 
 
+class PaginatedViewMixin:
+    paginate_by = 20
+    paginate_orphans = 4
+
+
 class UserFilterViewMixin:
     def get_queryset(self):
         user_id = self.request.session.get('duser_id')
         return self.model.objects.by_user(user_id=user_id)
 
 
-class TrackListView(UserFilterViewMixin, gc.ListView):
+class TrackListView(UserFilterViewMixin, PaginatedViewMixin, gc.ListView):
     template_name = 'ideezer/track_list.html'
     model = md.UserTrack
 
@@ -95,7 +100,7 @@ class TrackDetailView(UserFilterViewMixin, gc.DetailView):
     model = md.UserTrack
 
 
-class PlaylistListView(UserFilterViewMixin, gc.ListView):
+class PlaylistListView(UserFilterViewMixin, PaginatedViewMixin, gc.ListView):
     template_name = 'ideezer/playlist_list.html'
     model = md.Playlist
 

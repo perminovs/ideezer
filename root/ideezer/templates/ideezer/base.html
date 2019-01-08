@@ -3,6 +3,7 @@
 <head>
     {% load staticfiles %}
     {% load filters %}
+    {% block loads %}{% endblock %}
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}" />
     <title>{% block title %}{% endblock %}</title>
 </head>
@@ -11,9 +12,9 @@
     <h1> {% block h1 %} {% endblock %} </h1>
 
     {% if messages %}
-        {% for message in messages %}
-            <div class="{% if message.tags %} {{ message.tags|level2class }} {% endif %}"> {{ message }} </div>
-        {% endfor %}
+      {% for message in messages %}
+        <div class="{% if message.tags %} {{ message.tags|level2class }} {% endif %}"> {{ message }} </div>
+      {% endfor %}
     {% endif %}
 
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -38,7 +39,7 @@
 
     <hr>
     {% block footer %}{% endblock %}
-    iDeezer 2018 <a href="{% url 'license' %}"> License </a><br/>
+    iDeezer 2019 <a href="{% url 'license' %}"> License </a><br/>
     <br>
 
     <div class="card card-body border-success mb-3">
