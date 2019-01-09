@@ -2,8 +2,10 @@ import logging
 from tempfile import NamedTemporaryFile
 from plistlib import InvalidFileException
 
+from django.conf import settings
 from libpytunes import Library, Playlist
 
+from ..celery_app import celery_app
 from .. import models as md
 
 
@@ -22,13 +24,16 @@ def timeit(func):  # TODO remove debug deco
 
 
 def save(file, user):
-    with NamedTemporaryFile(delete=False) as tmp:
+    with NamedTemporaryFile(dir=settings.UPLOAD_PATH, delete=False) as tmp:
         for chunk in file.chunks():
             tmp.write(chunk)
 
-    process(path=tmp.name, user_id=user.id)
+    celery_app.send_task('process_itunes_library', kwargs={
+        'path': tmp.name, 'user_id': user.id,
+    })
 
 
+@celery_app.task(name='process_itunes_library')
 def process(path, user_id):
     logger.info('process file: %s for user %s', path, user_id)
 

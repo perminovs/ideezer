@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ideezer.apps.IdeezerConfig',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -176,3 +177,12 @@ for param, name in zip(
 ):
     if not param:
         logger.warning('env var `%s` is not defined', name)
+
+# CELERY STUFF
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='django-db')
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+UPLOAD_PATH = env('UPLOAD_PATH', default=None)

@@ -10,10 +10,33 @@ services:
       DATABASE_URL: psql://ideezer:51fa5866c8ce751dda8048f1f092c65274637e40@db:5432/ideezer
       HOSTNAME: localhost
       SERVICE_NAME: web
+      UPLOAD_PATH: /upload
+      CELERY_BROKER_URL: redis://redis:6379
+    volumes:
+      - library_data:/upload
     depends_on:
       - db
+      - celery
     expose:
       - "8000"
+
+  celery:
+    image: "psi/ideezer"
+    build:
+      context: .
+      dockerfile: docker/Docker.web
+    environment:
+      DATABASE_URL: psql://ideezer:51fa5866c8ce751dda8048f1f092c65274637e40@db:5432/ideezer
+      HOSTNAME: localhost
+      SERVICE_NAME: web
+      UPLOAD_PATH: /upload
+      CELERY_BROKER_URL: redis://redis:6379
+    volumes:
+      - library_data:/upload
+    depends_on:
+      - db
+      - redis
+    entrypoint: sh entrypoint_celery.sh
 
   nginx:
     image: "psi/ideezer-nginx"
@@ -34,6 +57,16 @@ services:
       POSTGRES_DB: ideezer
     volumes:
       - psql_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+
+  redis:
+    image: redis
+    ports:  # FIXME for tesing only; remove for production
+      - 6379:6379
+    expose:
+      - "6379"
 
 volumes:
   psql_data:
+  library_data:
