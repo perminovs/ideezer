@@ -41,6 +41,57 @@ class User(AbstractUser):
         return self.username or f'Deezer user #{self.deezer_id}'
 
 
+class UploadHistory(models.Model):
+    NOT_STARTED = 'NS'
+    STARTED = 'ST'
+    FAILED = 'FL'
+    SUCCESS = 'OK'
+
+    STATUSES = (
+        (NOT_STARTED, 'not started'),
+        (STARTED, 'started'),
+        (FAILED, 'failed'),
+        (SUCCESS, 'success'),
+    )
+
+    task_id = models.CharField(max_length=255, null=True)
+
+    # TODO fk on celery task model
+    start_time = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=2, choices=STATUSES, default=NOT_STARTED)
+
+    tracks_deleted = models.IntegerField(null=True)
+    playlists_deleted = models.IntegerField(null=True)
+    tracks_created = models.IntegerField(null=True)
+    playlists_created = models.IntegerField(null=True)
+    error = models.TextField(null=True)
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    @classmethod
+    def start(cls, task_id, user_id):
+        obj = cls(task_id=task_id, user_id=user_id, status=cls.STARTED)
+        obj.save()
+        return obj
+
+    def mark_failed(self, error):
+        self.status = self.FAILED
+        self.error = error
+        self.save()
+
+    def mark_success(
+        self, playlists_deleted, tracks_deleted,
+        playlists_created, tracks_created,
+    ):
+        self.playlists_deleted = playlists_deleted
+        self.tracks_deleted = tracks_deleted
+        self.playlists_created = playlists_created
+        self.tracks_created = tracks_created
+        self.status = self.SUCCESS
+        self.save()
+
+
 class UserTrack(BaseTrack):
     itunes_id = models.IntegerField()  # id from iTunes xml
     # `s_`-attribute for track search by Deezer API.
