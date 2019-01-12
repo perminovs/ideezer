@@ -3,6 +3,8 @@
 <head>
     {% load staticfiles %}
     {% load filters %}
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"> </script>
+    <script type="text/javascript" src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
     {% block loads %}{% endblock %}
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.css' %}" />
     <title>{% block title %}{% endblock %}</title>
@@ -17,23 +19,37 @@
       {% endfor %}
     {% endif %}
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <div class="collapse navbar-collapse">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item"><a class="nav-link" href="{% url 'main' %}">Main page</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'deezer_auth' %}">Deezer auth</a></li>
-          {% block links %}{% endblock %}
-        </ul>
+    <div class="navbar navbar-expand-lg navbar-light bg-light collapse navbar-collapse">
+      <div class="btn-toolbar mr-auto" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="btn-group mr-2" role="group" aria-label="First group">
+          <a class="btn btn-info" href="{% url 'main' %}">Main page</a>
+        </div>
 
-        {% if user.is_authenticated %}
-          <div class="text-right">
-            Logged in as <b> {{ user }} </b>
-            {% if user_picture_url %}<img src="{{ user_picture_url }}" alt="avatar"/> {% endif %}
-            <a href="{% url 'logout' %}"> Logout </a>
+        <div class="btn-group mr-2" role="group" aria-label="Second group">
+          <a class="btn btn-info" href="{% url 'deezer_auth' %}">Deezer auth</a>
+        </div>
+
+        <div class="btn-group" role="group" aria-label="Third group">
+          <div class="dropdown mr-auto">
+            <button class="btn btn-info dropdown-toggle" type="button" id="iTunesUploadMenuBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              iTunes Library
+            </button>
+            <div class="dropdown-menu" aria-labelledby="iTunesUploadMenuBtn">
+              <a class="dropdown-item" href="{% url 'upload_library' %}">Upload iTunes xml</a>
+              <a class="dropdown-item" href="#">Upload history</a>
+            </div>
           </div>
-        {% endif %}
+        </div>
       </div>
-    </nav>
+
+      {% if user.is_authenticated %}
+        <div class="text-right">
+          Logged in as <b> {{ user }} </b>
+          {% if user_picture_url %}<img src="{{ user_picture_url }}" alt="avatar"/> {% endif %}
+          <a href="{% url 'logout' %}"> Logout </a>
+        </div>
+      {% endif %}
+    </div>
 
     {% block content %}{% endblock %}
 
