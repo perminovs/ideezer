@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
+from django_celery_results.models import TaskResult as CeleryTaskResult
 
 
 ITUNES = 'itunes'
@@ -8,7 +9,16 @@ DEEZER = 'deezer'
 source_names = {ITUNES: 'iTunes', DEEZER: 'Deezer'}
 
 
-class BaseTrack(models.Model):
+class BaseModel(models.Model):
+    class Meta:
+        abstract = True
+
+    # keep calm and don't show warnings, PyCharm
+    # (I just don't have PyCharm Professional, mmkay?)
+    objects = models.Manager()
+
+
+class BaseTrack(BaseModel):
     title = models.CharField(max_length=255)
     artist = models.CharField(max_length=255, null=True, blank=True)
     album = models.CharField(max_length=255, null=True, blank=True)
@@ -41,46 +51,25 @@ class User(AbstractUser):
         return self.username or f'Deezer user #{self.deezer_id}'
 
 
-class UploadHistory(models.Model):
-    NOT_STARTED = 'NS'
-    STARTED = 'ST'
-    FAILED = 'FL'
-    SUCCESS = 'OK'
-
-    STATUSES = (
-        (NOT_STARTED, 'not started'),
-        (STARTED, 'started'),
-        (FAILED, 'failed'),
-        (SUCCESS, 'success'),
-    )
-
-    task_id = models.CharField(max_length=255, null=True)
-
-    # TODO fk on celery task model
-    start_time = models.DateTimeField(auto_now_add=True)
-    last_updated = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=2, choices=STATUSES, default=NOT_STARTED)
-
+class UploadHistory(BaseModel):
     tracks_deleted = models.IntegerField(null=True)
     playlists_deleted = models.IntegerField(null=True)
     tracks_created = models.IntegerField(null=True)
     playlists_created = models.IntegerField(null=True)
-    error = models.TextField(null=True)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    task = models.OneToOneField(
+        CeleryTaskResult, on_delete=models.CASCADE, unique=True,
+    )
 
     @classmethod
-    def start(cls, task_id, user_id):
-        obj = cls(task_id=task_id, user_id=user_id, status=cls.STARTED)
+    def create(cls, task_id, user_id):
+        task = CeleryTaskResult.objects.get_task(task_id=task_id)
+        obj = cls(task=task, user_id=user_id)
         obj.save()
         return obj
 
-    def mark_failed(self, error):
-        self.status = self.FAILED
-        self.error = error
-        self.save()
-
-    def mark_success(
+    def update_info(
         self, playlists_deleted, tracks_deleted,
         playlists_created, tracks_created,
     ):
@@ -88,7 +77,6 @@ class UploadHistory(models.Model):
         self.tracks_deleted = tracks_deleted
         self.playlists_created = playlists_created
         self.tracks_created = tracks_created
-        self.status = self.SUCCESS
         self.save()
 
 
@@ -130,7 +118,7 @@ class DeezerTrack(BaseTrack):
     deezer_id = models.IntegerField(unique=True)
 
 
-class TrackIdentity(models.Model):
+class TrackIdentity(BaseModel):
     """ How iTunes track is similar to Deezer one.
     """
     user_track = models.ForeignKey(UserTrack, on_delete=models.CASCADE)
@@ -146,7 +134,7 @@ class TrackIdentity(models.Model):
         )
 
 
-class Playlist(models.Model):
+class Playlist(BaseModel):
     itunes_id = models.IntegerField(null=True, blank=True)
     itunes_persistent_id = models.CharField(max_length=255, null=True, blank=True)
     itunes_title = models.CharField(max_length=255, null=True, blank=True)

@@ -1,8 +1,10 @@
 import logging
+from typing import Tuple
 from tempfile import NamedTemporaryFile
-from plistlib import InvalidFileException
 
 from django.conf import settings
+from celery import states
+from celery.signals import task_success, task_prerun
 from libpytunes import Library, Playlist
 
 from ..celery_app import celery_app
@@ -10,6 +12,7 @@ from .. import models as md
 
 
 logger = logging.getLogger(__name__)
+PROCESS_ITUNES_LIBRARY = 'process_itunes_library'
 
 
 def timeit(func):  # TODO remove debug deco
@@ -32,33 +35,47 @@ def save(file, user, async_mode=True):
         process(path=tmp.name, user_id=user.id)
         return
 
-    celery_app.send_task('process_itunes_library', kwargs={
+    celery_app.send_task(PROCESS_ITUNES_LIBRARY, kwargs={
         'path': tmp.name, 'user_id': user.id,
     })
 
 
-@celery_app.task(name='process_itunes_library', bind=True)
-def process(self, path, user_id):
-    logger.info('process file: %s for user %s', path, user_id)
-    history = md.UploadHistory.start(task_id=self.request.id, user_id=user_id)
-
-    try:
-        lib = Library(itunesxml=path)
-    except InvalidFileException as ife:
-        history.mark_failed(error=f'process error: {ife}')
-        logger.warning('process error: %s', ife)
+@task_prerun.connect
+def library_upload_prerun_handler(task_id, task, *args, **kwargs):
+    if task.name != PROCESS_ITUNES_LIBRARY:
         return
 
-    try:
-        # TODO merge playlist?
-        playlist_deleted, track_delete = clear_user_itunes_data(user_id)
-        insert_tracks(lib, user_id)
-        playlists_created = insert_playlists(lib, user_id)
-    except Exception as e:  # TODO -> by celery signals
-        history.mark_failed(error=str(e))
-        raise
+    task.update_state(state=states.STARTED)
+    task_kwargs = kwargs['kwargs']
+    md.UploadHistory.create(task_id=task_id, user_id=task_kwargs['user_id'])
 
-    history.mark_success(
+
+@task_success.connect
+def library_upload_success_handler(result, sender, **kwargs):
+    if sender.name != PROCESS_ITUNES_LIBRARY:
+        return
+
+    history = md.UploadHistory.objects.get(task__task_id=sender.request.id)
+    history.update_info(
+        playlists_deleted=result['playlists_deleted'],
+        tracks_deleted=result['tracks_deleted'],
+        playlists_created=result['playlists_created'],
+        tracks_created=result['tracks_created'],
+    )
+
+
+@celery_app.task(name=PROCESS_ITUNES_LIBRARY)
+def process(path, user_id) -> dict:
+    logger.info('process file: %s for user %s', path, user_id)
+
+    # no need for try-except because
+    # on any Exception celery task will be marked as failed
+    lib = Library(itunesxml=path)
+    playlist_deleted, track_delete = clear_user_itunes_data(user_id)
+    insert_tracks(lib, user_id)
+    playlists_created = insert_playlists(lib, user_id)
+
+    return dict(
         playlists_deleted=playlist_deleted,
         tracks_deleted=track_delete,
         playlists_created=playlists_created,
@@ -67,10 +84,13 @@ def process(self, path, user_id):
 
 
 @timeit
-def clear_user_itunes_data(user_id):
+def clear_user_itunes_data(user_id) -> Tuple[int, int]:
     _, pl_info = md.Playlist.objects.by_user(user_id).delete()
     _, tr_info = md.UserTrack.objects.by_user(user_id).delete()
-    return pl_info['ideezer.Playlist'], tr_info['ideezer.UserTrack']
+    return (
+        pl_info.get('ideezer.Playlist', 0),
+        tr_info.get('ideezer.UserTrack', 0),
+    )
 
 
 @timeit
@@ -83,7 +103,7 @@ def insert_tracks(lib, user_id):
 
 
 @timeit
-def insert_playlists(lib, user_id):
+def insert_playlists(lib, user_id) -> int:
     tracks_cache = {
         track.itunes_id: track
         for track in md.UserTrack.objects.by_user(user_id)
