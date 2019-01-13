@@ -1,10 +1,11 @@
 from django.utils.decorators import method_decorator
 
 
-def paginated_cbv(*args, **kwargs):
-    PAGINATE_BY = 20
-    PAGINATE_ORPHANS = 4
+PAGINATE_BY = 20
+PAGINATE_ORPHANS = 4
 
+
+def paginated_cbv(*args, paginate_by=PAGINATE_BY, paginate_orphans=PAGINATE_ORPHANS):
     if args and callable(args[0]):
         klass = args[0]
         klass.paginate_by = PAGINATE_BY
@@ -12,8 +13,8 @@ def paginated_cbv(*args, **kwargs):
         return klass
 
     def _inner(klass):
-        klass.paginate_by = kwargs.get('paginate_by', PAGINATE_BY)
-        klass.paginate_orphans = kwargs.get('paginate_orphans', PAGINATE_ORPHANS)
+        klass.paginate_by = paginate_by
+        klass.paginate_orphans = paginate_orphans
         return klass
 
     return _inner
