@@ -9,21 +9,11 @@ from libpytunes import Library, Playlist
 
 from ..celery_app import celery_app
 from .. import models as md
+from ..decorators.utils import timeit
 
 
 logger = logging.getLogger(__name__)
 PROCESS_ITUNES_LIBRARY = 'process_itunes_library'
-
-
-def timeit(func):  # TODO remove debug deco
-    from datetime import datetime
-
-    def _inner(*args, **kwargs):
-        start = datetime.now()
-        res = func(*args, **kwargs)
-        logger.info('%s: %s', func.__name__, datetime.now() - start)
-        return res
-    return _inner
 
 
 def save(file, user, async_mode=True):

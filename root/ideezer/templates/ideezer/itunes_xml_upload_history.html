@@ -1,0 +1,40 @@
+{% extends "ideezer/base.html" %}
+
+{% block loads %} {% load filters %} {% endblock %}
+
+{% block title %} iTunes library uploads {% endblock %}
+
+{% block h1 %} Uploads {% endblock %}
+
+{% block content %}
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Upload status</th>
+                <th scope="col">Time</th>
+                <th scope="col">Tracks created</th>
+                <th scope="col">Playlists created</th>
+                <th scope="col">Old tracks deleted</th>
+                <th scope="col">Old playlists deleted</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for obj in object_list %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td class="{{ obj.task.status|status2class }}">{{ obj.task.status }}</td>
+                <td>{{ obj.task.date_done }}</td>
+                <td>{{ obj.tracks_created|default_if_none:"" }}</td>
+                <td>{{ obj.playlists_created|default_if_none:"" }}</td>
+                <td>{{ obj.tracks_deleted|default_if_none:"" }}</td>
+                <td>{{ obj.playlists_deleted|default_if_none:"" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if is_paginated %}
+      {% include "ideezer/render_pagination.html" with page_obj=page_obj %}
+    {% endif %}
+{% endblock %}

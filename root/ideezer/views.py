@@ -9,6 +9,7 @@ from django.shortcuts import redirect, render
 from . import models as md
 from .controllers import deezer_auth as d_auth_ctl, library
 from .forms import UploadLibraryForm
+from .decorators.views import decorate_cbv, paginated_cbv
 
 
 logger = logging.getLogger(__name__)
@@ -82,18 +83,14 @@ def upload_library(request):
     return render(request, 'ideezer/itunes_xml_upload.html', {'form': form})
 
 
-class PaginatedViewMixin:
-    paginate_by = 20
-    paginate_orphans = 4
-
-
 class UserFilterViewMixin:
     def get_queryset(self):
         duser_id = self.request.session.get('duser_id')
         return self.model.objects.by_duser(duser_id=duser_id)
 
 
-class TrackListView(UserFilterViewMixin, PaginatedViewMixin, gc.ListView):
+@paginated_cbv
+class TrackListView(UserFilterViewMixin, gc.ListView):
     template_name = 'ideezer/track_list.html'
     model = md.UserTrack
 
@@ -103,7 +100,8 @@ class TrackDetailView(UserFilterViewMixin, gc.DetailView):
     model = md.UserTrack
 
 
-class PlaylistListView(UserFilterViewMixin, PaginatedViewMixin, gc.ListView):
+@paginated_cbv
+class PlaylistListView(UserFilterViewMixin, gc.ListView):
     template_name = 'ideezer/playlist_list.html'
     model = md.Playlist
 
@@ -111,3 +109,10 @@ class PlaylistListView(UserFilterViewMixin, PaginatedViewMixin, gc.ListView):
 class PlaylistDetailView(UserFilterViewMixin, gc.DetailView):
     template_name = 'ideezer/playlist_detail.html'
     model = md.Playlist
+
+
+@paginated_cbv(paginate_by=10, paginate_orphans=3)
+@decorate_cbv(login_required)
+class UploadHistoryListView(UserFilterViewMixin, gc.ListView):
+    template_name = 'ideezer/itunes_xml_upload_history.html'
+    model = md.UploadHistory

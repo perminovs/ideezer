@@ -62,6 +62,11 @@ class UploadHistory(BaseModel):
         CeleryTaskResult, on_delete=models.CASCADE, unique=True,
     )
 
+    objects = _Manager()
+
+    class Meta:
+        ordering = ['-task__date_done']
+
     @classmethod
     def create(cls, task_id, user_id):
         task = CeleryTaskResult.objects.get_task(task_id=task_id)
