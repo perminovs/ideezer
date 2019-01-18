@@ -17,6 +17,7 @@
                 <th scope="col">Playlists created</th>
                 <th scope="col">Old tracks deleted</th>
                 <th scope="col">Old playlists deleted</th>
+                <th scope="col">Desc</th>
             </tr>
         </thead>
         <tbody>
@@ -29,6 +30,7 @@
                 <td>{{ obj.playlists_created|default_if_none:"" }}</td>
                 <td>{{ obj.tracks_deleted|default_if_none:"" }}</td>
                 <td>{{ obj.playlists_deleted|default_if_none:"" }}</td>
+                <td>{{ obj.error|default_if_none:"" }}</td>
             </tr>
             {% endfor %}
         </tbody>

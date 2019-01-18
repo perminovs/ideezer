@@ -1,10 +1,11 @@
 import logging
 from typing import Tuple
 from tempfile import NamedTemporaryFile
+from plistlib import InvalidFileException
 
 from django.conf import settings
 from celery import states
-from celery.signals import task_success, task_prerun
+from celery.signals import task_success, task_prerun, task_failure
 from libpytunes import Library, Playlist
 
 from ..celery_app import celery_app
@@ -52,6 +53,16 @@ def library_upload_success_handler(result, sender, **kwargs):
         playlists_created=result['playlists_created'],
         tracks_created=result['tracks_created'],
     )
+
+
+@task_failure.connect
+def library_upload_failure_handler(task_id, exception, *args, **kwargs):
+    if not isinstance(exception, InvalidFileException):
+        return
+
+    history = md.UploadHistory.objects.get(task__task_id=task_id)
+    history.message = 'Invalid file'
+    history.save()
 
 
 @celery_app.task(name=PROCESS_ITUNES_LIBRARY)

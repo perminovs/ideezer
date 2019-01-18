@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django_celery_results.models import TaskResult as CeleryTaskResult
+from celery.states import FAILURE
 
 
 ITUNES = 'itunes'
@@ -56,6 +57,7 @@ class UploadHistory(BaseModel):
     playlists_deleted = models.IntegerField(null=True)
     tracks_created = models.IntegerField(null=True)
     playlists_created = models.IntegerField(null=True)
+    message = models.CharField(max_length=255, null=True)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     task = models.OneToOneField(
@@ -63,6 +65,8 @@ class UploadHistory(BaseModel):
     )
 
     objects = _Manager()
+
+    DEFAULT_ERROR_MESSAGE = 'Server error'
 
     class Meta:
         ordering = ['-task__date_done']
@@ -83,6 +87,11 @@ class UploadHistory(BaseModel):
         self.playlists_created = playlists_created
         self.tracks_created = tracks_created
         self.save()
+
+    @property
+    def error(self):
+        if self.task.status == FAILURE:
+            return self.message or self.DEFAULT_ERROR_MESSAGE
 
 
 class UserTrack(BaseTrack):
