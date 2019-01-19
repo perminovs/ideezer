@@ -8,8 +8,8 @@ PAGINATE_ORPHANS = 4
 def paginated_cbv(*args, paginate_by=PAGINATE_BY, paginate_orphans=PAGINATE_ORPHANS):
     if args and callable(args[0]):
         klass = args[0]
-        klass.paginate_by = PAGINATE_BY
-        klass.paginate_orphans = PAGINATE_ORPHANS
+        klass.paginate_by = paginate_by
+        klass.paginate_orphans = paginate_orphans
         return klass
 
     def _inner(klass):
