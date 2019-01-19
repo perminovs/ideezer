@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 
 import requests
 from django.conf import settings
@@ -21,17 +21,12 @@ class AboutUser(NamedTuple):
     picture_url: str
 
 
-class DeezerAuthException(Exception):
-    def __init__(self, error, error_reason, url=None):
-        self.error = error
-        self.error_reason = error_reason
-        self.url = url
+class DeezerAuthRejected(Exception):
+    pass
 
-    def __str__(self):
-        url = ', url: {}'.format(self.url) if self.url else ''
-        return 'error: "{}", error_reason: "{}"{}'.format(
-            self.error, self.error_reason, url
-        )
+
+class DeezerUnexpectedResponse(Exception):
+    pass
 
 
 def build_auth_url(request):
@@ -76,10 +71,7 @@ def get_token(request) -> TokenInfo:
     code = request.GET.get('code', None)
     if not code:
         logger.warning('auth rejected')
-        raise DeezerAuthException(
-            error=request.GET.get('error', None),
-            error_reason=request.GET.get('error_reason', None)
-        )
+        raise DeezerAuthRejected('auth rejected')
 
     url = 'https://connect.deezer.com/oauth/access_token.php?'
     params = {
@@ -87,18 +79,9 @@ def get_token(request) -> TokenInfo:
         'code': code
     }
     resp = requests.post(url, params)
-    if not resp.ok:
-        logger.error('response is not ok')
-        logger.error('resp.status_code: %s, resp.reason: %s',
-                     resp.status_code, resp.reason)
-        raise DeezerAuthException(
-            error=resp.status_code, error_reason=resp.reason, url=url
-        )
-    resp_text = resp.text
-    resp_text = resp_text.replace('access_token=', '')
-    idx = resp_text.rfind('&expires=')
-    token = resp_text[:idx]
-    seconds_left = int(resp_text[idx + len('&expires='):])
+    resp.raise_for_status()
+
+    token, seconds_left = __parse_deezer_response(resp)
     expires_time = datetime.now() + timedelta(seconds=seconds_left)
 
     return TokenInfo(
@@ -108,18 +91,21 @@ def get_token(request) -> TokenInfo:
     )
 
 
+def __parse_deezer_response(response: requests.Response) -> Tuple[str, int]:
+    resp_text = response.text
+    resp_text = resp_text.replace('access_token=', '')
+    idx = resp_text.rfind('&expires=')
+    token = resp_text[:idx]
+    seconds_left = int(resp_text[idx + len('&expires='):])
+    return token, seconds_left
+
+
 def about_user(token) -> AboutUser:
     url = 'https://api.deezer.com/user/me'
     resp = requests.get(url, {'access_token': token})
-    if not resp.ok:
-        logger.error('response is not ok')
-        logger.error('resp.status_code: %s, resp.reason: %s',
-                     resp.status_code, resp.reason)
-        raise DeezerAuthException(
-            error=resp.status_code, error_reason=resp.reason, url=url
-        )
-    info = resp.json()
+    resp.raise_for_status()
 
+    info = resp.json()
     error = info.get('error')
     deezer_id = info.get('id')
     deezer_name = info.get('name')
@@ -128,9 +114,7 @@ def about_user(token) -> AboutUser:
                  f'id: "{deezer_id}", name: "{deezer_name}"')
     if error:
         logger.error('auth error: %s', error)
-        raise DeezerAuthException(
-            error=error, error_reason=resp.reason, url=url
-        )
+        raise DeezerUnexpectedResponse(error)
 
     return AboutUser(
         deezer_id=deezer_id,

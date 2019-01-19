@@ -5,9 +5,10 @@ from django.contrib.auth import authenticate, login, logout as __logout__
 from django.contrib.auth.decorators import login_required
 from django.views import generic as gc
 from django.shortcuts import redirect, render
+import requests
 
 from . import models as md
-from .controllers import deezer_auth as d_auth_ctl, library
+from .controllers import deezer_auth, library
 from .forms import UploadLibraryForm
 from .decorators.views import decorate_cbv, paginated_cbv
 
@@ -16,21 +17,23 @@ logger = logging.getLogger(__name__)
 SESSION_ATTRIBUTES = ('token', 'expires', 'user_picture_url', 'duser_id')
 
 
-def deezer_auth(request):
+def deezer_auth_view(request):
     logger.info('deezer_auth')
-    url = d_auth_ctl.build_auth_url(request)
+    url = deezer_auth.build_auth_url(request)
     return redirect(url)
 
 
 def deezer_redirect(request):
+    _redirect = 'main'
     session = request.session
+
     try:
-        token_info = d_auth_ctl.get_token(request)
+        token_info = deezer_auth.get_token(request)
 
         session['token'] = token_info.token
         session['expires'] = token_info.expires
 
-        about_user = d_auth_ctl.about_user(token_info.token)
+        about_user = deezer_auth.about_user(token_info.token)
         session['duser_id'] = about_user.deezer_id
         session['user_picture_url'] = about_user.picture_url
 
@@ -44,15 +47,22 @@ def deezer_redirect(request):
         messages.success(request, msg)
         logger.info('Deezer auth success for %s. Token expires in %s sec',
                     request.user, token_info.seconds_left)
-        _redirect = session.pop('redirect', 'main')
+        _redirect = session.pop('redirect', _redirect)
 
         for key in SESSION_ATTRIBUTES:
             if key not in session:
                 logger.warning('key %s does not saved to session', key)
-    except d_auth_ctl.DeezerAuthException:
-        messages.error(request, 'Deezer auth was unsuccessful for {}'.format(
-            request.user))
-        _redirect = 'main'
+
+    except deezer_auth.DeezerAuthRejected:
+        messages.warning(request, 'Deezer auth was rejected')
+
+    except deezer_auth.DeezerUnexpectedResponse:
+        messages.error(
+            request, 'Unexpected Deezer behaviour, auth was unsuccessful')
+
+    except requests.HTTPError:
+        logger.exception('deezer auth error')
+        messages.error(request, 'Deezer auth was unsuccessful')
 
     return redirect(_redirect)
 
