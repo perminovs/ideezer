@@ -1,12 +1,14 @@
 import logging
 from datetime import datetime, timedelta
 from typing import NamedTuple, Tuple
+from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 __dt_format = '%Y.%m.%d %H:%M:%S'
+SESSION_ATTRIBUTES = ('token', 'expires', 'user_picture_url', 'duser_id')
 
 
 class TokenInfo(NamedTuple):
@@ -33,13 +35,14 @@ def build_auth_url(request):
     """ Returns url to login user on deezer.com
     """
     redirect_uri = request.build_absolute_uri('deezer_redirect')
-    url = __build_auth_url(redirect_uri, request)
-    return url
+    return __build_auth_url(redirect_uri, request)
 
 
-def __build_auth_url(redirect_uri, request):
+def __build_auth_url(redirect_uri, request) -> str:
     redirect_uri = redirect_uri.replace('127.0.0.1', 'localhost')  # FIXME
 
+    # Заменяем домен, по которому сервис доступен из nginx,
+    # на домен, по которому сервис доступен из вне:
     # браузер должен получить url типа `http://hostname/...`
     # вместо `http://web/...`
     # где `hostname` - реальный домен машины, например, locahost
@@ -49,20 +52,18 @@ def __build_auth_url(redirect_uri, request):
         _src_uri = redirect_uri
         http_host = request.META.get('HTTP_HOST')
         redirect_uri = redirect_uri.replace(
-            'http://{service}/'.format(service=http_host),
-            'http://{host}/'.format(host=settings.HOSTNAME),
+            f'http://{http_host}/',
+            f'http://{settings.HOSTNAME}/',
         )
         logger.info('redirect_uri was changed from: `%s` to `%s`',
                     _src_uri, redirect_uri)
 
-    return (
-        'https://connect.deezer.com/oauth/auth.php?app_id={app_id}&'
-        'redirect_uri={redirect_uri}&perms={perms}'.format(
-            app_id=settings.DEEZER_APP_ID,
-            redirect_uri=redirect_uri,
-            perms=settings.DEEZER_BASE_PERMS,
-        )
-    )
+    params = urlencode({
+        'app_id': settings.DEEZER_APP_ID,
+        'redirect_uri': redirect_uri,
+        'perms': settings.DEEZER_BASE_PERMS,
+    })
+    return f'https://connect.deezer.com/oauth/auth.php?{params}'
 
 
 def get_token(request) -> TokenInfo:
@@ -121,3 +122,19 @@ def about_user(token) -> AboutUser:
         deezer_name=deezer_name,
         picture_url=info.get('picture_small'),
     )
+
+
+def update_session(session: dict, token_info: TokenInfo, user_info: AboutUser):
+    session['token'] = token_info.token
+    session['expires'] = token_info.expires
+    session['duser_id'] = user_info.deezer_id
+    session['user_picture_url'] = user_info.picture_url
+
+    for key in SESSION_ATTRIBUTES:
+        if key not in session:
+            logger.warning('key %s does not saved to session', key)
+
+
+def clear_session(session):
+    for key in SESSION_ATTRIBUTES:
+        session.pop(key, None)

@@ -14,7 +14,6 @@ from .decorators.views import decorate_cbv, paginated_cbv
 
 
 logger = logging.getLogger(__name__)
-SESSION_ATTRIBUTES = ('token', 'expires', 'user_picture_url', 'duser_id')
 
 
 def deezer_auth_view(request):
@@ -24,57 +23,45 @@ def deezer_auth_view(request):
 
 
 def deezer_redirect(request):
-    _redirect = 'main'
+    redirect_path = 'main'
     session = request.session
 
     try:
         token_info = deezer_auth.get_token(request)
-
-        session['token'] = token_info.token
-        session['expires'] = token_info.expires
-
-        about_user = deezer_auth.about_user(token_info.token)
-        session['duser_id'] = about_user.deezer_id
-        session['user_picture_url'] = about_user.picture_url
-
-        user = authenticate(
-            request, deezer_id=about_user.deezer_id,
-            deezer_name=about_user.deezer_name)
-        login(request, user)
-
-        msg = 'Deezer auth success. Token expires in {} min {} sec'.format(
-            token_info.seconds_left // 60, token_info.seconds_left % 60)
-        messages.success(request, msg)
-        logger.info('Deezer auth success for %s. Token expires in %s sec',
-                    request.user, token_info.seconds_left)
-        _redirect = session.pop('redirect', _redirect)
-
-        for key in SESSION_ATTRIBUTES:
-            if key not in session:
-                logger.warning('key %s does not saved to session', key)
-
+        user_info = deezer_auth.about_user(token_info.token)
     except deezer_auth.DeezerAuthRejected:
         messages.warning(request, 'Deezer auth was rejected')
-
+        return redirect(redirect_path)
     except deezer_auth.DeezerUnexpectedResponse:
         messages.error(
             request, 'Unexpected Deezer behaviour, auth was unsuccessful')
-
+        return redirect(redirect_path)
     except requests.HTTPError:
         logger.exception('deezer auth error')
         messages.error(request, 'Deezer auth was unsuccessful')
+        return redirect(redirect_path)
 
-    return redirect(_redirect)
+    user = authenticate(
+        request, deezer_id=user_info.deezer_id,
+        deezer_name=user_info.deezer_name)
+    login(request, user)
+    deezer_auth.update_session(session, token_info, user_info)
+
+    msg = 'Deezer auth success. Token expires in {} min {} sec'.format(
+        token_info.seconds_left // 60, token_info.seconds_left % 60)
+    messages.success(request, msg)
+    logger.info('Deezer auth success for %s. Token expires in %s sec',
+                request.user, token_info.seconds_left)
+
+    redirect_path = session.pop('redirect', redirect_path)
+    return redirect(redirect_path)
 
 
 def logout(request):
     __logout__(request)
-
-    for key in SESSION_ATTRIBUTES:
-        request.session.pop(key, None)
+    deezer_auth.clear_session(request.session)
 
     messages.success(request, 'You have logout.')
-    logger.info('logout')
     return redirect('main')
 
 
