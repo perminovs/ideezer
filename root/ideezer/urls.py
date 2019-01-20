@@ -31,4 +31,5 @@ urlpatterns = [
     path(r'playlist/<int:pk>', views.PlaylistDetailView.as_view(), name='playlist_detail'),
     path(r'license', TemplateView.as_view(template_name='ideezer/license.html'), name='license'),
     path(r'', TemplateView.as_view(template_name='ideezer/main.html'), name='main'),
+    path(r'vtest', views.vtest, name='vtest'),
 ]

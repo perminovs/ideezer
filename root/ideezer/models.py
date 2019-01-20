@@ -131,6 +131,15 @@ class UserTrack(BaseTrack):
 class DeezerTrack(BaseTrack):
     deezer_id = models.IntegerField(unique=True)
 
+    @classmethod
+    def from_deezer(cls, track_info):
+        return cls(
+            deezer_id=track_info['id'],
+            title=track_info['title'],
+            artist=track_info['artist']['name'],
+            album=track_info['album']['title'],
+        )
+
 
 class TrackIdentity(BaseModel):
     """ How iTunes track is similar to Deezer one.

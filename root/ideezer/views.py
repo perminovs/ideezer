@@ -8,7 +8,7 @@ from django.shortcuts import redirect, render
 import requests
 
 from . import models as md
-from .controllers import deezer_auth, library
+from .controllers import deezer_auth, library, deezer_search
 from .forms import UploadLibraryForm
 from .decorators.views import decorate_cbv, paginated_cbv
 
@@ -113,3 +113,13 @@ class PlaylistDetailView(UserFilterViewMixin, gc.DetailView):
 class UploadHistoryListView(UserFilterViewMixin, gc.ListView):
     template_name = 'ideezer/itunes_xml_upload_history.html'
     model = md.UploadHistory
+
+
+def vtest(request):
+    from django.shortcuts import HttpResponse
+
+    test = 'Led Zeppelin - Heartbreaker'
+    tracks = deezer_search.simple(query=test, token=request.session.get('token'))
+    html = '<br/>'.join(str(track) for track in tracks)
+
+    return HttpResponse(html)

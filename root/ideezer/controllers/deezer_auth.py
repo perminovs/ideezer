@@ -27,7 +27,7 @@ class DeezerAuthRejected(Exception):
     pass
 
 
-class DeezerUnexpectedResponse(Exception):
+class DeezerUnexpectedResponse(Exception):  # TODO move to especial module
     pass
 
 
