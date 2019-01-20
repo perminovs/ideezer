@@ -115,11 +115,19 @@ class UploadHistoryListView(UserFilterViewMixin, gc.ListView):
     model = md.UploadHistory
 
 
-def vtest(request):
+def vtest_simple(request):
     from django.shortcuts import HttpResponse
 
-    test = 'Led Zeppelin - Heartbreaker'
-    tracks = deezer_search.simple(query=test, token=request.session.get('token'))
+    track = md.UserTrack.objects.get(itunes_id=1822, user_id=1)
+    tracks = deezer_search.simple(track=track, token=request.session.get('token'))
     html = '<br/>'.join(str(track) for track in tracks)
+    return HttpResponse(html)
 
+
+def vtest_advanced(request):
+    from django.shortcuts import HttpResponse
+
+    track = md.UserTrack.objects.get(itunes_id=1822, user_id=1)
+    tracks = deezer_search.advanced(track=track, token=request.session.get('token'))
+    html = '<br/>'.join(str(track) for track in tracks)
     return HttpResponse(html)

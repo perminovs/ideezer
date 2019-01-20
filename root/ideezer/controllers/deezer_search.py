@@ -2,6 +2,7 @@ import requests
 
 from .. import models as md
 
+# https://developers.deezer.com/api/search
 
 URL = 'https://api.deezer.com/search'
 LIMIT = 100
@@ -18,7 +19,21 @@ class DeezerResponseError(Exception):  # TODO move to especial module
         return f'{self.type}: {self.message} ({self.message})'
 
 
-def simple(query, token=None, limit=None):
+def simple(track: md.UserTrack, with_album=True, token=None, limit=None):
+    query = f'{track.s_artist} - {track.s_title}'
+    if with_album and track.s_album:
+        query = f'{query} {track.s_album}'
+    return _search(query, token, limit)
+
+
+def advanced(track: md.UserTrack, with_album=True, token=None, limit=None):
+    query = f'artist:"{track.s_artist}" track:"{track.s_title}"'
+    if with_album and track.s_album:
+        query = f'{query} album:"{track.s_album}"'
+    return _search(query, token, limit)
+
+
+def _search(query, token=None, limit=None):
     limit = limit or LIMIT
     params = {'q': query, 'limit': limit}
     if token:

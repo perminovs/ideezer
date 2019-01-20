@@ -97,10 +97,9 @@ class UploadHistory(BaseModel):
 class UserTrack(BaseTrack):
     itunes_id = models.IntegerField()  # id from iTunes xml
     # `s_`-attribute for track search by Deezer API.
-    # By default are the same as attributes without `s_`
-    s_title = models.CharField(max_length=255, null=True, blank=True)
-    s_artist = models.CharField(max_length=255, null=True, blank=True)
-    s_album = models.CharField(max_length=255, null=True, blank=True)
+    _s_title = models.CharField(db_column='s_title', max_length=255, null=True, blank=True)
+    _s_artist = models.CharField(db_column='s_artist', max_length=255, null=True, blank=True)
+    _s_album = models.CharField(db_column='s_album', max_length=255, null=True, blank=True)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -113,6 +112,18 @@ class UserTrack(BaseTrack):
 
     def __str__(self):
         return super(UserTrack, self).__str__() + ' ({})'.format(self.user)
+
+    @property
+    def s_title(self):
+        return self._s_title or self.title
+
+    @property
+    def s_artist(self):
+        return self._s_artist or self.artist
+
+    @property
+    def s_album(self):
+        return self._s_album or self.album
 
     def get_absolute_url(self):
         return reverse('track_detail', args=[self.pk])
