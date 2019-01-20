@@ -153,7 +153,11 @@ LOGGING = {
         'ideezer': {
             'level': 'INFO',
             'handlers': ['console', 'file'],
-        }
+        },
+        'celery': {
+            'level': 'INFO',
+            'handlers': ['console', 'file'],
+        },
     },
 }
 

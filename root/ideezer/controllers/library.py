@@ -14,6 +14,7 @@ from ..decorators.utils import timeit
 
 
 logger = logging.getLogger(__name__)
+clogger = logging.getLogger('celery')
 PROCESS_ITUNES_LIBRARY = 'process_itunes_library'
 
 
@@ -67,7 +68,7 @@ def library_upload_failure_handler(task_id, exception, *args, **kwargs):
 
 @celery_app.task(name=PROCESS_ITUNES_LIBRARY)
 def process(path, user_id) -> dict:
-    logger.info('process file: %s for user %s', path, user_id)
+    clogger.info('process file: %s for user %s', path, user_id)
 
     # no need for try-except because
     # on any Exception celery task will be marked as failed
@@ -84,7 +85,7 @@ def process(path, user_id) -> dict:
     )
 
 
-@timeit
+@timeit(clogger)
 def clear_user_itunes_data(user_id) -> Tuple[int, int]:
     _, pl_info = md.Playlist.objects.by_user(user_id).delete()
     _, tr_info = md.UserTrack.objects.by_user(user_id).delete()
@@ -94,7 +95,7 @@ def clear_user_itunes_data(user_id) -> Tuple[int, int]:
     )
 
 
-@timeit
+@timeit(clogger)
 def insert_tracks(lib, user_id):
     tracks = (
         md.UserTrack.from_itunes(track, user_id)
@@ -103,7 +104,7 @@ def insert_tracks(lib, user_id):
     md.UserTrack.objects.bulk_create(tracks)
 
 
-@timeit
+@timeit(clogger)
 def insert_playlists(lib, user_id) -> int:
     tracks_cache = {
         track.itunes_id: track
@@ -114,7 +115,7 @@ def insert_playlists(lib, user_id) -> int:
     for idx, plst_name in enumerate(lib.getPlaylistNames(), start=1):
         plst: Playlist = lib.getPlaylist(plst_name)
         if plst.is_folder or plst.distinguished_kind:
-            logger.info(
+            clogger.info(
                 'skip `%s` because is_folder = %s, distinguished_kind = %s',
                 plst_name, plst.is_folder, plst.distinguished_kind)
             continue
@@ -128,5 +129,5 @@ def insert_playlists(lib, user_id) -> int:
         created_cnt += 1
 
         if idx % 10 == 0:
-            logger.info('iter: %s', idx)
+            clogger.info('iter: %s', idx)
     return created_cnt
