@@ -4,7 +4,7 @@ requests
 gunicorn
 gevent
 django-environ
-git+git://github.com/perminovs/libpytunes@playlist_attributes
+git+git://github.com/liamks/libpytunes
 celery
 redis
 django-celery-results
