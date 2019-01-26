@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout as __logout__
 from django.contrib.auth.decorators import login_required
 from django.views import generic as gc
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 import requests
 
 from . import models as md
@@ -113,6 +113,17 @@ class PlaylistDetailView(UserFilterViewMixin, gc.DetailView):
 class UploadHistoryListView(UserFilterViewMixin, gc.ListView):
     template_name = 'ideezer/itunes_xml_upload_history.html'
     model = md.UploadHistory
+
+
+def playlist_search_simple(request, pk):
+    playlist: md.Playlist = get_object_or_404(md.Playlist, pk=pk)
+    tracks = [
+        deezer_search.simple(track, one=True)
+        for track in playlist.itunes_content.all()
+    ]
+    for track in tracks:
+        logger.debug(track)
+    return redirect('playlist_detail', pk)
 
 
 def vtest_simple(request):

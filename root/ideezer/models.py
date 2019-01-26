@@ -110,8 +110,8 @@ class UserTrack(BaseTrack):
             ('user', 'itunes_id')
         )
 
-    def __str__(self):
-        return super(UserTrack, self).__str__() + ' ({})'.format(self.user)
+    def get_absolute_url(self):
+        return f'track/{self.pk}'
 
     @property
     def s_title(self):
@@ -201,7 +201,15 @@ class Playlist(BaseModel):
         )
 
     def __str__(self):
-        return f'{self.itunes_title} ({self.user})'
+        itunes = ''
+        if self.itunes_title:
+            itunes = f'{self.itunes_title} ({self.itunes_content.count()})'
+
+        deezer = ''
+        if self.deezer_title:
+            deezer = f'{self.deezer_title} ({self.deezer_content.count()})'
+
+        return f'{itunes} {deezer}'
 
     def save(self, *args, **kwargs):
         err = self.validate()

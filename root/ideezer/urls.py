@@ -30,6 +30,7 @@ urlpatterns = [
     path(r'playlists', views.PlaylistListView.as_view(), name='playlist_list'),
     path(r'playlist/<int:pk>', views.PlaylistDetailView.as_view(), name='playlist_detail'),
     path(r'license', TemplateView.as_view(template_name='ideezer/license.html'), name='license'),
+    path(r'playlist_search_simple/<int:pk>', views.playlist_search_simple, name='playlist_search_simple'),
     path(r'', TemplateView.as_view(template_name='ideezer/main.html'), name='main'),
     path(r'vtest_simple', views.vtest_simple, name='vtest_simple'),
     path(r'vtest_advanced', views.vtest_advanced, name='vtest_advanced'),
