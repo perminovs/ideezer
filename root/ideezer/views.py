@@ -87,11 +87,13 @@ class UserFilterViewMixin:
 
 
 @paginated_cbv
+@decorate_cbv(login_required)
 class TrackListView(UserFilterViewMixin, gc.ListView):
     template_name = 'ideezer/track_list.html'
     model = md.UserTrack
 
 
+@decorate_cbv(login_required)
 class TrackDetailView(UserFilterViewMixin, gc.DetailView):
     template_name = 'ideezer/track_detail.html'
     model = md.UserTrack
@@ -103,9 +105,25 @@ class PlaylistListView(UserFilterViewMixin, gc.ListView):
     model = md.Playlist
 
 
+@decorate_cbv(login_required)
 class PlaylistDetailView(UserFilterViewMixin, gc.DetailView):
     template_name = 'ideezer/playlist_detail.html'
     model = md.Playlist
+    obj = None
+
+    def get_object(self, queryset=None):
+        self.obj = super(PlaylistDetailView, self).get_object(queryset)
+        return self.obj
+
+    def get_context_data(self, **kwargs):
+        context = super(PlaylistDetailView, self).get_context_data(**kwargs)
+        paired = self.obj.itunes_content.filter(identities__isnull=False)
+        unpaired = self.obj.itunes_content.filter(identities__isnull=True)
+        # paired[0].identities.filter(trackidentity__choosen=True)
+
+        context['paired'] = paired
+        context['unpaired'] = unpaired
+        return context
 
 
 @paginated_cbv(paginate_by=10, paginate_orphans=3)
@@ -115,8 +133,11 @@ class UploadHistoryListView(UserFilterViewMixin, gc.ListView):
     model = md.UploadHistory
 
 
+@login_required
 def playlist_search_simple(request, pk):
-    playlist: md.Playlist = get_object_or_404(md.Playlist, pk=pk)
+    playlist: md.Playlist = get_object_or_404(
+        md.Playlist, pk=pk, user=request.user
+    )
     tracks = [
         deezer_search.simple(track, one=True)
         for track in playlist.itunes_content.all()

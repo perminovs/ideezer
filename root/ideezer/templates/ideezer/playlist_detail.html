@@ -12,15 +12,14 @@
 
     <a class='btn btn-info' href="{% url 'playlist_search_simple' object.id %}">Search tracks in Deezer</a>
 
-    {% if object.itunes_id %}
-        {% for obj in object.itunes_content.all %}
-            <li> <a href="{{ obj.get_absolute_url }}">{{ obj }}</a> </li>
-        {% endfor %}
-    <br/>
-    {% endif %}
-    {% if object.deezer_id %}
-        {% for obj in object.deezer_content.all %}
-            <li> {{ obj }} </li>
-        {% endfor %}
-    {% endif %}
+    <b>paired</b>
+    {% for obj in paired %}
+        <li> <a href="{{ obj.get_absolute_url }}">{{ obj }}</a> </li>
+    {% endfor %}
+
+    <b>unpaired</b>
+    {% for obj in unpaired %}
+        <li> <a href="{{ obj.get_absolute_url }}">{{ obj }}</a> </li>
+    {% endfor %}
+
 {% endblock %}

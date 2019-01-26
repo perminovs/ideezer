@@ -102,6 +102,7 @@ class UserTrack(BaseTrack):
     _s_album = models.CharField(db_column='s_album', max_length=255, null=True, blank=True)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    identities = models.ManyToManyField('DeezerTrack', through='TrackIdentity')
 
     objects = _Manager()
 
@@ -109,9 +110,6 @@ class UserTrack(BaseTrack):
         unique_together = (
             ('user', 'itunes_id')
         )
-
-    def get_absolute_url(self):
-        return f'track/{self.pk}'
 
     @property
     def s_title(self):
@@ -164,14 +162,14 @@ class TrackIdentity(BaseModel):
     class Meta:
         unique_together = (
             ('user_track', 'deezer_track'),
-            ('user_track', 'deezer_track', 'choosen'),
+            ('user_track', 'choosen'),
         )
 
 
 class Playlist(BaseModel):
-    itunes_id = models.IntegerField(null=True, blank=True)
-    itunes_persistent_id = models.CharField(max_length=255, null=True, blank=True)
-    itunes_title = models.CharField(max_length=255, null=True, blank=True)
+    itunes_id = models.IntegerField()
+    itunes_persistent_id = models.CharField(max_length=255)
+    itunes_title = models.CharField(max_length=255)
     itunes_content = models.ManyToManyField(UserTrack, blank=True)
 
     # denormalization
@@ -201,53 +199,30 @@ class Playlist(BaseModel):
         )
 
     def __str__(self):
-        itunes = ''
-        if self.itunes_title:
-            itunes = f'{self.itunes_title} ({self.itunes_content.count()})'
+        itunes = f'{self.itunes_title} ({self.itunes_content.count()})'
 
-        deezer = ''
-        if self.deezer_title:
-            deezer = f'{self.deezer_title} ({self.deezer_content.count()})'
+        if not self.deezer_id:
+            return itunes
 
-        return f'{itunes} {deezer}'
+        deezer = f'{self.deezer_title} ({self.deezer_content.count()})'
+        return f'{itunes} | {deezer}'
 
     def save(self, *args, **kwargs):
-        err = self.validate()
-        if err:
+        # Validations does not work, when saving from admin interface
+
+        # deezer consistency check
+        if bool(self.deezer_id) != bool(self.deezer_title):
+            err = (
+                f'deezer_id and deezer_title attributes must be `None` or'
+                f'`not None` together. Got deezer_id = {self.deezer_id} and '
+                f'deezer_title = {self.deezer_title} instead'
+            )
             raise ValueError(err)
 
-        if self.pk:  # can we use many-to-many relationship?
-            # Check playlist contains only tracks from playlist.user
-            # Does not work, when saving from admin interface
+        # check playlist contains only tracks from playlist.user
+        if self.pk:
             for itunes_track in self.itunes_content.all():
                 if itunes_track.user != self.user:
                     err = 'Playlist tracks must belongs to playlist User'
                     raise ValueError(err)
         return super(Playlist, self).save(*args, **kwargs)
-
-    def validate(self):
-        """ 'Interface' validation. Check playlist attribute is correct
-
-        :return error text if incorrect, None otherwise
-        """
-        # If iTunes/Deezer id is filled, its title must be filled too.
-        for attr1, attr2, name1, name2, in (
-            (self.itunes_id, self.itunes_title, 'itunes_id', 'itunes_title'),
-            (self.deezer_id, self.deezer_title, 'deezer_id', 'deezer_title'),
-        ):
-            err = self.validate_xor(attr1, attr2, name1, name2)
-            if err:
-                return err
-
-        if not self.itunes_title and not self.deezer_title:
-            return 'Playlist title cannot be None'
-
-    @staticmethod
-    def validate_xor(attr1, attr2, name1, name2):
-        if bool(attr1) != bool(attr2):
-            return (
-                '{name1} and {name2} attributes must be `None` or `not None` '
-                'together. Got {name1} = `{value1}` and {name2} = `{value2}` '
-                'instead'.format(
-                    name1=name1, name2=name2, value1=attr1, value2=attr2,
-                ))
