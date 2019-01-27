@@ -10,14 +10,22 @@
 
 {% block content %}
 
-    <a class='btn btn-info' href="{% url 'playlist_search_simple' object.id %}">Search tracks in Deezer</a>
+    <a class='btn btn-info btn-sm' href="{% url 'playlist_search_simple' object.id %}">Search tracks in Deezer</a>
 
-    <b>paired</b>
-    {% for obj in paired %}
-        <li> <a href="{{ obj.get_absolute_url }}">{{ obj }}</a> </li>
-    {% endfor %}
+    <hr>
+    <h5>Paired tracks</h5>
+    <table class="table table-borderless table-condensed table-hover">
+        <tbody>
+            {% for obj in paired %}
+            <tr>
+                <td><a href="{{ obj.user_track.get_absolute_url }}">{{ obj.user_track }}</a></td>
+                <td>{{ obj.deezer_track }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-    <b>unpaired</b>
+    <h5>Unpaired tracks</h5>
     {% for obj in unpaired %}
         <li> <a href="{{ obj.get_absolute_url }}">{{ obj }}</a> </li>
     {% endfor %}

@@ -103,6 +103,7 @@ class UserTrack(BaseTrack):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     identities = models.ManyToManyField('DeezerTrack', through='TrackIdentity')
+    playlists = models.ManyToManyField('Playlist')
 
     objects = _Manager()
 
@@ -177,7 +178,6 @@ class Playlist(BaseModel):
 
     deezer_id = models.IntegerField(null=True, blank=True)
     deezer_title = models.CharField(max_length=255, null=True, blank=True)
-    deezer_content = models.ManyToManyField(DeezerTrack, blank=True)
 
     objects = _Manager()
 
@@ -188,6 +188,18 @@ class Playlist(BaseModel):
 
     def get_absolute_url(self):
         return reverse('playlist_detail', args=[self.pk])
+
+    @property
+    def identities(self):
+        return TrackIdentity.objects.filter(
+            choosen=True
+        ).filter(
+            user_track__playlist=self
+        )
+
+    @property
+    def unpaired(self):
+        return self.itunes_content.filter(identities__isnull=True)
 
     @classmethod
     def from_itunes(cls, playlist, user_id):
@@ -204,7 +216,7 @@ class Playlist(BaseModel):
         if not self.deezer_id:
             return itunes
 
-        deezer = f'{self.deezer_title} ({self.deezer_content.count()})'
+        deezer = f'{self.deezer_title} ({self.identities.count()})'
         return f'{itunes} | {deezer}'
 
     def save(self, *args, **kwargs):

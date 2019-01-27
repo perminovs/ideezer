@@ -117,12 +117,9 @@ class PlaylistDetailView(UserFilterViewMixin, gc.DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(PlaylistDetailView, self).get_context_data(**kwargs)
-        paired = self.obj.itunes_content.filter(identities__isnull=False)
-        unpaired = self.obj.itunes_content.filter(identities__isnull=True)
-        # paired[0].identities.filter(trackidentity__choosen=True)
 
-        context['paired'] = paired
-        context['unpaired'] = unpaired
+        context['paired'] = self.obj.identities
+        context['unpaired'] = self.obj.unpaired
         return context
 
 
