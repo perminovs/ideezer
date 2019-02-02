@@ -6,6 +6,8 @@ from urllib.parse import urlencode
 import requests
 from django.conf import settings
 
+from .deezer_base import DeezerAuthRejected, DeezerUnexpectedResponse
+
 logger = logging.getLogger(__name__)
 __dt_format = '%Y.%m.%d %H:%M:%S'
 SESSION_ATTRIBUTES = ('token', 'expires', 'user_picture_url', 'duser_id')
@@ -21,14 +23,6 @@ class AboutUser(NamedTuple):
     deezer_id: int
     deezer_name: str
     picture_url: str
-
-
-class DeezerAuthRejected(Exception):
-    pass
-
-
-class DeezerUnexpectedResponse(Exception):  # TODO move to especial module
-    pass
 
 
 def build_auth_url(request):

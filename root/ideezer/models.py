@@ -47,7 +47,7 @@ class _Manager(models.Manager):
 
 class User(AbstractUser):
     # nullable because admin may has no deezer_id
-    deezer_id = models.IntegerField(unique=True, null=True)
+    deezer_id = models.BigIntegerField(unique=True, null=True)
 
     def __str__(self):
         return self.username or f'Deezer user #{self.deezer_id}'
@@ -96,7 +96,7 @@ class UploadHistory(BaseModel):
 
 
 class UserTrack(BaseTrack):
-    itunes_id = models.IntegerField()  # id from iTunes xml
+    itunes_id = models.BigIntegerField()  # id from iTunes xml
     # `s_`-attribute for track search by Deezer API.
     _s_title = models.CharField(db_column='s_title', max_length=255, null=True, blank=True)
     _s_artist = models.CharField(db_column='s_artist', max_length=255, null=True, blank=True)
@@ -140,7 +140,7 @@ class UserTrack(BaseTrack):
 
 
 class DeezerTrack(BaseTrack):
-    deezer_id = models.IntegerField(unique=True)
+    deezer_id = models.BigIntegerField(unique=True)
 
     @classmethod
     def from_deezer(cls, track_info):
@@ -188,7 +188,7 @@ class TrackIdentity(BaseModel):
             )
 
     @classmethod
-    def mark_exists_track_as_pair(cls, user_track):
+    def mark_exists_track_as_pair(cls, user_track):  # TODO move to controller
         """ Returns True when:
             * `user_track` already has a `choosen` deezer pair;
             * `user_track` has a set of available pairs without `choosen`. In
@@ -209,7 +209,7 @@ class TrackIdentity(BaseModel):
 
 
 class Playlist(BaseModel):
-    itunes_id = models.IntegerField()
+    itunes_id = models.BigIntegerField()
     itunes_persistent_id = models.CharField(max_length=255)
     itunes_title = models.CharField(max_length=255)
     itunes_content = models.ManyToManyField(UserTrack, blank=True)
@@ -217,7 +217,7 @@ class Playlist(BaseModel):
     # denormalization
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    deezer_id = models.IntegerField(null=True, blank=True)
+    deezer_id = models.BigIntegerField(null=True, blank=True)
     deezer_title = models.CharField(max_length=255, null=True, blank=True)
 
     objects = _Manager()

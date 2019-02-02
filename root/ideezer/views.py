@@ -8,7 +8,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 import requests
 
 from . import models as md
-from .controllers import deezer_auth, library, deezer_search
+from .controllers import deezer_auth, library, deezer_search, deezer_playlist
 from .forms import UploadLibraryForm
 from .decorators.views import decorate_cbv, paginated_cbv
 
@@ -152,6 +152,23 @@ def playlist_search_simple(request, pk):
         identities.append(ti)
     md.TrackIdentity.objects.bulk_create(identities)
 
+    return redirect('playlist_detail', pk)
+
+
+@login_required
+def playlist_deezer_create(request, pk):
+    playlist: md.Playlist = get_object_or_404(
+        md.Playlist, pk=pk, user=request.user,
+    )
+    token = request.session.get('token')
+    deezer_playlist.create(playlist=playlist, token=token)
+    deezer_playlist.add_tracks(playlist=playlist, token=token)
+    playlist_info = deezer_playlist.info(playlist=playlist, token=token)
+
+    deezer_url = playlist_info.get('link')
+    if deezer_url:
+        return redirect(deezer_url)
+    logger.warning('unexpected response: `%s` - missed link', playlist_info)
     return redirect('playlist_detail', pk)
 
 

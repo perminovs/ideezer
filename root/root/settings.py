@@ -171,7 +171,7 @@ AUTH_USER_MODEL = 'ideezer.User'
 DEEZER_APP_ID = env('DEEZER_APP_ID', default=None)
 DEEZER_APP_NAME = env('DEEZER_APP_NAME', default=None)
 DEEZER_SECRET_KEY = env('DEEZER_SECRET_KEY', default=None)
-DEEZER_BASE_PERMS = env('DEEZER_BASE_PERMS', default='basic_access,email')
+DEEZER_BASE_PERMS = env('DEEZER_BASE_PERMS', default='basic_access,email,manage_library')
 
 
 logger = logging.getLogger(__name__)
