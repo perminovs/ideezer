@@ -166,12 +166,12 @@ class TrackIdentity(BaseModel):
     deezer_track = models.ForeignKey(DeezerTrack, on_delete=models.CASCADE)
     diff = models.IntegerField()
     # pair `user_track` to `deezer_track` mark as best (correct)
-    choosen = models.NullBooleanField(null=True, default=None, blank=True)
+    chosen = models.NullBooleanField(null=True, default=None, blank=True)
 
     class Meta:
         unique_together = (
             ('user_track', 'deezer_track'),
-            ('user_track', 'choosen'),
+            ('user_track', 'chosen'),
         )
 
     def set_diff(self):
@@ -190,20 +190,20 @@ class TrackIdentity(BaseModel):
     @classmethod
     def mark_exists_track_as_pair(cls, user_track):  # TODO move to controller
         """ Returns True when:
-            * `user_track` already has a `choosen` deezer pair;
-            * `user_track` has a set of available pairs without `choosen`. In
-            this case also mark best candidate for pair as `choosen`.
+            * `user_track` already has a `chosen` deezer pair;
+            * `user_track` has a set of available pairs without `chosen`. In
+            this case also mark best candidate for pair as `chosen`.
 
             Return None otherwise.
         """
-        if cls.objects.filter(user_track=user_track, choosen=True).first():
+        if cls.objects.filter(user_track=user_track, chosen=True).first():
             return True
 
         pair = cls.objects.filter(
             user_track=user_track,
         ).order_by('-diff').first()
         if pair:
-            pair.choosen = True
+            pair.chosen = True
             pair.save()
             return True
 
@@ -233,7 +233,7 @@ class Playlist(BaseModel):
     @property
     def identities(self):
         return TrackIdentity.objects.filter(
-            choosen=True
+            chosen=True
         ).filter(
             user_track__playlist=self
         )

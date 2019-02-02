@@ -146,7 +146,7 @@ def playlist_search_simple(request, pk):
             continue
         ti = md.TrackIdentity(
             user_track=track, deezer_track=deezer_track,
-            choosen=True,
+            chosen=True,
         )
         ti.set_diff()
         identities.append(ti)
