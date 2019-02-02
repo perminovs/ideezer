@@ -170,21 +170,3 @@ def playlist_deezer_create(request, pk):
         return redirect(deezer_url)
     logger.warning('unexpected response: `%s` - missed link', playlist_info)
     return redirect('playlist_detail', pk)
-
-
-def vtest_simple(request):
-    from django.shortcuts import HttpResponse
-
-    track = md.UserTrack.objects.get(itunes_id=1822, user_id=1)
-    tracks = deezer_search.simple(track=track, token=request.session.get('token'))
-    html = '<br/>'.join(str(track) for track in tracks)
-    return HttpResponse(html)
-
-
-def vtest_advanced(request):
-    from django.shortcuts import HttpResponse
-
-    track = md.UserTrack.objects.get(itunes_id=1822, user_id=1)
-    tracks = deezer_search.advanced(track=track, token=request.session.get('token'))
-    html = '<br/>'.join(str(track) for track in tracks)
-    return HttpResponse(html)
