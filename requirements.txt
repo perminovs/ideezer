@@ -8,3 +8,4 @@ git+git://github.com/liamks/libpytunes
 celery
 redis
 django-celery-results
+python-Levenshtein

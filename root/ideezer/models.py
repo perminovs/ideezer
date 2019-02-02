@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django_celery_results.models import TaskResult as CeleryTaskResult
 from celery.states import FAILURE
+import Levenshtein
 
 
 ITUNES = 'itunes'
@@ -143,12 +144,19 @@ class DeezerTrack(BaseTrack):
 
     @classmethod
     def from_deezer(cls, track_info):
-        return cls(
-            deezer_id=track_info['id'],
+        deezer_id = track_info['id']
+        obj = cls.objects.filter(deezer_id=deezer_id).first()
+        if obj:
+            return obj
+
+        obj = cls(
+            deezer_id=deezer_id,
             title=track_info['title'],
             artist=track_info['artist']['name'],
             album=track_info['album']['title'],
         )
+        obj.save()
+        return obj
 
 
 class TrackIdentity(BaseModel):
@@ -165,6 +173,39 @@ class TrackIdentity(BaseModel):
             ('user_track', 'deezer_track'),
             ('user_track', 'choosen'),
         )
+
+    def set_diff(self):
+        self.diff = 0
+        for attr1, attr2 in zip(
+            (self.user_track.s_artist, self.user_track.s_title),
+            (self.deezer_track.artist, self.deezer_track.title),
+        ):
+            self.diff += Levenshtein.distance(attr1, attr2)
+
+        if self.user_track.s_album:
+            self.diff += Levenshtein.distance(
+                self.user_track.s_album, self.deezer_track.album
+            )
+
+    @classmethod
+    def mark_exists_track_as_pair(cls, user_track):
+        """ Returns True when:
+            * `user_track` already has a `choosen` deezer pair;
+            * `user_track` has a set of available pairs without `choosen`. In
+            this case also mark best candidate for pair as `choosen`.
+
+            Return None otherwise.
+        """
+        if cls.objects.filter(user_track=user_track, choosen=True).first():
+            return True
+
+        pair = cls.objects.filter(
+            user_track=user_track,
+        ).order_by('-diff').first()
+        if pair:
+            pair.choosen = True
+            pair.save()
+            return True
 
 
 class Playlist(BaseModel):

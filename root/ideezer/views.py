@@ -133,14 +133,25 @@ class UploadHistoryListView(UserFilterViewMixin, gc.ListView):
 @login_required
 def playlist_search_simple(request, pk):
     playlist: md.Playlist = get_object_or_404(
-        md.Playlist, pk=pk, user=request.user
+        md.Playlist, pk=pk, user=request.user,
     )
-    tracks = [
-        deezer_search.simple(track, one=True)
-        for track in playlist.itunes_content.all()
-    ]
-    for track in tracks:
-        logger.debug(track)
+
+    identities = []
+    for track in playlist.itunes_content.all():
+        if md.TrackIdentity.mark_exists_track_as_pair(user_track=track):
+            continue
+
+        deezer_track = deezer_search.simple(track, one=True)
+        if not deezer_track:
+            continue
+        ti = md.TrackIdentity(
+            user_track=track, deezer_track=deezer_track,
+            choosen=True,
+        )
+        ti.set_diff()
+        identities.append(ti)
+    md.TrackIdentity.objects.bulk_create(identities)
+
     return redirect('playlist_detail', pk)
 
 

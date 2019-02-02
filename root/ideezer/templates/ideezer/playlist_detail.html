@@ -2,15 +2,13 @@
 
 {% block title %} iDeezer Playlist {% endblock %}
 
-{% block h1 %} Playlist {% endblock %}
-
-{% block links %}
-    <li class="nav-item>"><a class="nav-link" href="{% url 'playlist_list' %}">Playlists</a></li>
-{% endblock %}
+{% block h1 %} {{ object.itunes_title }} {% endblock %}
 
 {% block content %}
 
     <a class='btn btn-info btn-sm' href="{% url 'playlist_search_simple' object.id %}">Search tracks in Deezer</a>
+    <a class='btn btn-info btn-sm' href="#">Link to exists Deezer playlist</a>
+    <a class='btn btn-info btn-sm' href="#">Create in Deezer</a>
 
     <hr>
     <h5>Paired tracks</h5>
