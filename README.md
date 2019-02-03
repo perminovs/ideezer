@@ -6,6 +6,7 @@ Playlist migration service from iTunes to Deezer.
 
 * Register your own app on https://developers.deezer.com/myapps. Set "Application domain": `localhost`.
 * Create `.env` file (in `.../root/root/.env`) with your application parameters (see `.env_example` for details).
+* **Optionally**: download bootstrap v4.0.0 (https://getbootstrap.com) and copy bootstrap directory to `.../root/ideezer/static/` 
 * Run via docker-compose from root directory:
 ```bash
 docker-compose build
