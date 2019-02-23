@@ -226,6 +226,7 @@ class Playlist(BaseModel):
         unique_together = (
             ('user', 'itunes_id')
         )
+        ordering = ['itunes_title']
 
     def get_absolute_url(self):
         return reverse('playlist_detail', args=[self.pk])

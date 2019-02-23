@@ -12,12 +12,17 @@
 
     <hr>
     <h5>Paired tracks</h5>
-    <table class="table table-borderless table-condensed table-hover">
+    <table class="table table-borderless table-condensed">
         <tbody>
             {% for obj in paired %}
             <tr>
-                <td><a href="{{ obj.user_track.get_absolute_url }}">{{ obj.user_track }}</a></td>
-                <td>{{ obj.deezer_track }}</td>
+                <td> {{ obj.user_track }} </td>
+                <td class="text-nowrap">
+                    <a href="{{ obj.user_track.get_absolute_url }}"> <i class="material-icons md-18"> edit </i> </a>
+                    <a href="#"> <i class="material-icons md-18"> search </i> </a>
+                </td>
+                <td> {{ obj.deezer_track }} </td>
+                <td> <a href="#"> <i class="material-icons md-18"> clear </i> </a> </td>
             </tr>
             {% endfor %}
         </tbody>
