@@ -11,4 +11,4 @@ echo "PostgreSQL started"
 
 python manage.py migrate django_celery_results
 
-celery -A ideezer worker -l info
+exec celery -A ideezer worker -l info
