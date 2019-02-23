@@ -17,20 +17,20 @@ Including another URLconf
 from django.urls import path
 from django.views.generic import TemplateView
 
-from . import views
+from .views import auth, library, tracks, playlists
 
 urlpatterns = [
-    path(r'logout', views.logout, name='logout'),
-    path(r'deezer_auth', views.deezer_auth_view, name='deezer_auth'),
-    path(r'deezer_redirect', views.deezer_redirect, name='deezer_redirect'),
-    path(r'upload_library', views.upload_library, name='upload_library'),
-    path(r'upload_history', views.UploadHistoryListView.as_view(), name='upload_history'),
-    path(r'tracks', views.TrackListView.as_view(), name='track_list'),
-    path(r'track/<int:pk>', views.TrackDetailView.as_view(), name='track_detail'),
-    path(r'playlists', views.PlaylistListView.as_view(), name='playlist_list'),
-    path(r'playlist/<int:pk>', views.PlaylistDetailView.as_view(), name='playlist_detail'),
+    path(r'logout', auth.logout, name='logout'),
+    path(r'deezer_auth', auth.deezer_auth_view, name='deezer_auth'),
+    path(r'deezer_redirect', auth.deezer_redirect, name='deezer_redirect'),
+    path(r'upload_library', library.upload_library, name='upload_library'),
+    path(r'upload_history', library.UploadHistoryListView.as_view(), name='upload_history'),
+    path(r'tracks', tracks.TrackListView.as_view(), name='track_list'),
+    path(r'track/<int:pk>', tracks.TrackDetailView.as_view(), name='track_detail'),
+    path(r'playlists', playlists.PlaylistListView.as_view(), name='playlist_list'),
+    path(r'playlist/<int:pk>', playlists.PlaylistDetailView.as_view(), name='playlist_detail'),
     path(r'license', TemplateView.as_view(template_name='ideezer/license.html'), name='license'),
-    path(r'playlist_search_simple/<int:pk>', views.playlist_search_simple, name='playlist_search_simple'),
-    path(r'playlist_deezer_create/<int:pk>', views.playlist_deezer_create, name='playlist_deezer_create'),
+    path(r'playlist_search_simple/<int:pk>', playlists.playlist_search_simple, name='playlist_search_simple'),
+    path(r'playlist_deezer_create/<int:pk>', playlists.playlist_deezer_create, name='playlist_deezer_create'),
     path(r'', TemplateView.as_view(template_name='ideezer/main.html'), name='main'),
 ]
