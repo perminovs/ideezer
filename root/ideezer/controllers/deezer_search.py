@@ -11,6 +11,23 @@ LIMIT = 100
 logger = logging.getLogger(__name__)
 
 
+def combined(track: md.UserTrack, token=None, one=False):
+    if track.s_album:
+        functions = advanced, advanced, simple, simple
+        album_flags = True, False, True, False
+    else:
+        functions = advanced, simple
+        album_flags = False, False
+
+    for function, album_flag in zip(functions, album_flags):
+        deezer_track = function(
+            track=track, token=token,
+            one=one, with_album=album_flag,
+        )
+        if deezer_track:
+            return deezer_track
+
+
 def simple(
     track: md.UserTrack, with_album=True, token=None,
     limit=None, one=False

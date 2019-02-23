@@ -19,6 +19,26 @@ class BaseModel(models.Model):
     # (I just don't have PyCharm Professional, mmkay?)
     objects = models.Manager()
 
+    @classmethod
+    def create_or_update(cls, **kwargs):
+        obj = cls._search(**kwargs)
+        if obj:
+            return obj
+
+        return cls._create(**kwargs)
+
+    @classmethod
+    def _search(cls, **kwargs):
+        obj = cls.objects.filter(**kwargs).first()
+        if obj:
+            return obj
+
+    @classmethod
+    def _create(cls, **kwargs):
+        obj = cls(**kwargs)
+        obj.save()
+        return obj
+
 
 class BaseTrack(BaseModel):
     title = models.CharField(max_length=255)
@@ -173,6 +193,13 @@ class TrackIdentity(BaseModel):
             ('user_track', 'deezer_track'),
             ('user_track', 'chosen'),
         )
+
+    @classmethod
+    def _create(cls, **kwargs):
+        obj = cls(**kwargs)
+        obj.set_diff()
+        obj.save()
+        return obj
 
     def set_diff(self):
         self.diff = 0

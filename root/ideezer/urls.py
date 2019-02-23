@@ -27,6 +27,7 @@ urlpatterns = [
     path(r'upload_history', library.UploadHistoryListView.as_view(), name='upload_history'),
     path(r'tracks', tracks.TrackListView.as_view(), name='track_list'),
     path(r'track/<int:pk>', tracks.TrackDetailView.as_view(), name='track_detail'),
+    path(r'search_track/<int:tid>/<int:pid>', tracks.search_track, name='search_track'),
     path(r'playlists', playlists.PlaylistListView.as_view(), name='playlist_list'),
     path(r'playlist/<int:pk>', playlists.PlaylistDetailView.as_view(), name='playlist_detail'),
     path(r'license', TemplateView.as_view(template_name='ideezer/license.html'), name='license'),
