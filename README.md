@@ -19,7 +19,7 @@ docker-compose up
 * Go to "iTunes Library" / "Upload iTunes xml" and upload your "iTunes Library.xml" file (by default it should be at root of your itunes library directory).
 * Wait for uploading and processing (result will be shown at "iTunes Library" / "Upload history")
 * Go to "Main page" / "Playlists" and choose playlist you want migrate to Deezer.
-* Press "Search tracks in Deezer" and then "Create in Deezer" buttons from playlist page. As the result you will be redirected at page with newly created playlist on deezer.com.
+* Press "Search tracks in Deezer" and then "Create in Deezer" buttons from playlist page. As the result you will be redirected to page with newly created playlist on deezer.com.
 * ...
 * Profit!
 
