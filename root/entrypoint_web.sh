@@ -12,4 +12,10 @@ echo "PostgreSQL started"
 yes y | python manage.py makemigrations && python manage.py migrate
 python manage.py collectstatic --noinput
 
-exec gunicorn wsgi -b 0.0.0.0:8000 --workers 3
+exec gunicorn wsgi \
+      --workers 3 \
+      --timeout 60 \
+      -b 0.0.0.0:8000 \
+      --access-logfile - \
+      --error-logfile - \
+      --access-logformat "%(h)s %(l)s %(u)s %(t)s pid %(p)s \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\" %(l)s %(D)s µs"
