@@ -22,7 +22,8 @@
                     <a href="{% url 'search_track' obj.user_track.id object.id %}"> <i class="material-icons md-18"> search </i> </a>
                 </td>
                 <td> {{ obj.deezer_track }} </td>
-                <td> <a href="#"> <i class="material-icons md-18"> clear </i> </a> </td>
+                <td> {{ obj.diff }} </td>
+                <td> <a href="{% url 'identity_clear' obj.id object.id %}"> <i class="material-icons md-18"> clear </i> </a> </td>
             </tr>
             {% endfor %}
         </tbody>

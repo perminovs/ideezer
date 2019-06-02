@@ -33,5 +33,6 @@ urlpatterns = [
     path(r'license', TemplateView.as_view(template_name='ideezer/license.html'), name='license'),
     path(r'playlist_search_simple/<int:pk>', playlists.playlist_search_simple, name='playlist_search_simple'),
     path(r'playlist_deezer_create/<int:pk>', playlists.playlist_deezer_create, name='playlist_deezer_create'),
+    path(r'identity_clear/<int:pk>/<int:playlist_from>', playlists.identity_clear, name='identity_clear'),
     path(r'', TemplateView.as_view(template_name='ideezer/main.html'), name='main'),
 ]

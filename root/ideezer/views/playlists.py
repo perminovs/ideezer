@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseNotFound
 from django.views import generic as gc
 from django.shortcuts import redirect, get_object_or_404
 
@@ -77,3 +78,14 @@ def playlist_deezer_create(request, pk):
         return redirect(deezer_url)
     logger.warning('unexpected response: `%s` - missed link', playlist_info)
     return redirect('playlist_detail', pk)
+
+
+@login_required
+def identity_clear(request, pk, playlist_from):
+    identity: md.TrackIdentity = get_object_or_404(md.TrackIdentity, pk=pk)
+    if identity.user_track.user != request.user:
+        return HttpResponseNotFound('Identity does not found')
+
+    identity.delete()
+
+    return redirect('playlist_detail', playlist_from)
