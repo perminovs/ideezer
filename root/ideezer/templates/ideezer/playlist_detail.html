@@ -7,7 +7,7 @@
 {% block content %}
 
     <a class='btn btn-info btn-sm' href="{% url 'playlist_search_simple' object.id %}">Search tracks in Deezer</a>
-    <a class='btn btn-info btn-sm' href="#">Link to exists Deezer playlist</a>
+    <a class='btn btn-info btn-sm' href="{% url 'playlist_link_choose' object.id %}">Link to exists Deezer playlist</a>
     <a class='btn btn-info btn-sm' href="{% url 'playlist_deezer_create' object.id %}">Create in Deezer</a>
 
     <hr>

@@ -3,7 +3,7 @@ import logging
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseNotFound
 from django.views import generic as gc
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 
 from .base import UserFilterViewMixin
 from .. import models as md
@@ -89,3 +89,12 @@ def identity_clear(request, pk, playlist_from):
     identity.delete()
 
     return redirect('playlist_detail', playlist_from)
+
+
+@login_required
+def playlist_link_choose(request, pk):
+    playlist = get_object_or_404(md.Playlist, pk=pk)
+    token = request.session.get('token')
+    deezer_playlists = deezer_playlist.get_all(token=token)
+    context = {'object': playlist, 'deezer_playlists': [1, 2, 3]}
+    return render(request, 'ideezer/playlist_link_choose.html', context)

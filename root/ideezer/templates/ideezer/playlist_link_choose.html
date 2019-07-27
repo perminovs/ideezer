@@ -1,0 +1,13 @@
+{% extends "ideezer/base.html" %}
+
+{% block title %} iDeezer Playlist {% endblock %}
+
+{% block h1 %} {{ object.itunes_title }} {% endblock %}
+
+{% block content %}
+
+{% for dplaylist in deezer_playlists %}
+    <li> {{ dplaylist }} </li>
+{% endfor %}
+
+{% endblock %}

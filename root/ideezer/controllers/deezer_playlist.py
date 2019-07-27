@@ -8,14 +8,14 @@ from .. import models as md
 logger = logging.getLogger(__name__)
 
 
-CREATE_URL = 'https://api.deezer.com/user/me/playlists'
+PLAYLIST_URL = 'https://api.deezer.com/user/me/playlists'
 ADDTRACKS_URL = 'https://api.deezer.com/playlist/{playlist_id}/tracks'
 INFO_URL = 'https://api.deezer.com/playlist/{playlist_id}'
 
 
 def create(playlist: md.Playlist, token):
     deezer_data = request(
-        method='post', url=CREATE_URL,
+        method='post', url=PLAYLIST_URL,
         params={'title': playlist.itunes_title, 'access_token': token},
     )
     playlist.deezer_id = deezer_data['id']
@@ -37,6 +37,18 @@ def add_tracks(playlist: md.Playlist, token):
     )
     logger.debug('%s: %s tracks added', playlist, len(deezer_track_ids))
     return deezer_data
+
+
+def get_all(token):
+    playlists = request(
+        method='GET', url=PLAYLIST_URL,
+        params={'access_token': token},
+    )
+    # id
+    # title
+    # creation_date
+    # link
+    return playlists
 
 
 def info(playlist: md.Playlist, token):
