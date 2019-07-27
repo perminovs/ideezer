@@ -146,7 +146,7 @@ class UserTrack(BaseTrack):
         return self._s_album or self.album
 
     def get_absolute_url(self):
-        return reverse('track_detail', args=[self.pk])
+        return reverse('track_edit', args=[self.pk])
 
     @classmethod
     def from_itunes(cls, track, user_id):
@@ -191,8 +191,21 @@ class TrackIdentity(BaseModel):
     class Meta:
         unique_together = (
             ('user_track', 'deezer_track'),
-            ('user_track', 'chosen'),
         )
+
+    def save(
+        self, force_insert=False, force_update=False,
+        using=None, update_fields=None
+    ):
+        exists = type(self).objects.filter(
+            user_track=self.user_track, chosen=True,
+        ).first()  # FIXME можно сделать всё в запросе
+        if exists and self.chosen and exists.id != self.chosen.id:
+            raise ValueError(f'Duplicate entry for chosen track: {self.user_track}')
+
+        return super(TrackIdentity, self).save(
+            force_insert=force_insert, force_update=force_update,
+            using=using, update_fields=update_fields)
 
     @classmethod
     def _create(cls, **kwargs):

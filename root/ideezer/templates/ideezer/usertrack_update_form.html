@@ -1,0 +1,40 @@
+{% extends "ideezer/base.html" %}
+
+{% block title %} iDeezer {{ obj.title }} {% endblock %}
+
+{% block h1 %} {{ object }} {% endblock %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Update">
+</form>
+
+{% if chosen_deezer_track %}
+<div class="d-flex p-2">
+    <i class="material-icons md-24"> done </i>
+    <p>
+        <b>{{ chosen_deezer_track.deezer_track }}</b>
+        (diff: {{ chosen_deezer_track.diff }})
+    </p>
+</div>
+{% endif %}
+
+<br>
+
+<ul>
+    {% for identity in identities %}
+    <li>
+        <b>{{ identity.deezer_track }}</b>
+        (diff: {{ identity.diff }})
+        <a href="{% url 'set_track_identity' object.id identity.id %}"> Set as pair </a>
+    </li>
+    {% endfor %}
+</ul>
+
+<div>
+    <a href="{% url 'search_track_from_track' object.id %}"> Search it! </a>
+</div>
+
+{% endblock %}

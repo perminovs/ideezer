@@ -19,7 +19,7 @@
                 <td> {{ obj.user_track }} </td>
                 <td class="text-nowrap">
                     <a href="{{ obj.user_track.get_absolute_url }}"> <i class="material-icons md-18"> edit </i> </a>
-                    <a href="{% url 'search_track' obj.user_track.id object.id %}"> <i class="material-icons md-18"> search </i> </a>
+                    <a href="{% url 'search_track_from_playlist' obj.user_track.id object.id %}"> <i class="material-icons md-18"> search </i> </a>
                 </td>
                 <td> {{ obj.deezer_track }} </td>
                 <td> {{ obj.diff }} </td>
@@ -34,7 +34,7 @@
     {% for obj in unpaired %}
         <li>
             <a href="{{ obj.get_absolute_url }}"> <i class="material-icons md-18"> edit </i> </a>
-            <a href="{% url 'search_track' obj.id object.id %}"> <i class="material-icons md-18"> search </i> </a>
+            <a href="{% url 'search_track_from_playlist' obj.id object.id %}"> <i class="material-icons md-18"> search </i> </a>
             {{ obj }}
         </li>
     {% endfor %}
