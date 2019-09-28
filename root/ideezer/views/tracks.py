@@ -63,7 +63,7 @@ def search_track_from_playlist(request, tid, pid):
 
 
 def search_track_from_track(request, tid):
-    _search_track(request, tid, mark_best=False)
+    _search_track(request, tid, mark_best=True)
     return redirect('track_edit', tid)
 
 
@@ -77,14 +77,25 @@ def _search_track(request, tid: int, mark_best: bool):  # TODO убрать от
             user_track=track,
             deezer_track=deezer_track,
         )
+        ti.set_diff()
 
         if mark_best:
             exists: md.TrackIdentity = md.TrackIdentity.objects.filter(
-                user_track=track, chosen=True).first()
-            if exists and exists.diff >= ti.diff:
+                user_track=track, chosen=True
+            ).first()
+            if not exists:
+                ti.chosen = True
+                ti.set_diff()
+                ti.save()
+            elif exists.id == ti.id:
+                pass
+            elif exists.chosen and exists.diff < ti.diff:
+                pass
+            else:
                 exists.chosen = False
                 exists.save()
                 ti.chosen = True
+                ti.set_diff()
+                ti.save()
 
-        ti.save()
     return deezer_track

@@ -200,7 +200,7 @@ class TrackIdentity(BaseModel):
         exists = type(self).objects.filter(
             user_track=self.user_track, chosen=True,
         ).first()  # FIXME можно сделать всё в запросе
-        if exists and self.chosen and exists.id != self.chosen.id:
+        if exists and self.chosen and exists.id != self.id:
             raise ValueError(f'Duplicate entry for chosen track: {self.user_track}')
 
         return super(TrackIdentity, self).save(
@@ -281,7 +281,10 @@ class Playlist(BaseModel):
 
     @property
     def unpaired(self):
-        return self.itunes_content.filter(identities__isnull=True)
+        empty_ideinity = self.itunes_content.filter(identities__isnull=True)
+        non_chosen = self.itunes_content.filter(trackidentity__chosen=False)
+        # todo remove duplicates
+        return empty_ideinity | non_chosen
 
     @classmethod
     def from_itunes(cls, playlist, user_id):
